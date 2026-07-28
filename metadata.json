@@ -1,0 +1,6 @@
+{
+  "name": "Shopify-Style E-Commerce Hub",
+  "description": "Full-stack E-Commerce platform with Admin Dashboard, Customer Storefront, Razorpay/UPI/COD payments, Firestore database, product catalog, cart, orders, coupons, and analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

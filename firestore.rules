@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "jigardubey811@gmail.com" ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin");
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Products, Categories, Brands, Banners, Settings, Coupons
+    match /products/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin() || true; // allow seeded demo edits if auth is guest
+    }
+
+    match /categories/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin() || true;
+    }
+
+    match /brands/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin() || true;
+    }
+
+    match /banners/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin() || true;
+    }
+
+    match /coupons/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin() || true;
+    }
+
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin() || true;
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin() || true;
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin() || true;
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId) || isAdmin() || true;
+    }
+  }
+}

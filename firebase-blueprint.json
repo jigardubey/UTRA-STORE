@@ -1,0 +1,128 @@
+{
+  "entities": {
+    "products": {
+      "title": "Products",
+      "description": "Store items available for purchase",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "compareAtPrice": { "type": "number" },
+        "category": { "type": "string" },
+        "brand": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "stock": { "type": "number" },
+        "sku": { "type": "string" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "isFeatured": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Product classifications",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "brands": {
+      "title": "Brands",
+      "description": "Product brands",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logo": { "type": "string" }
+      }
+    },
+    "orders": {
+      "title": "Orders",
+      "description": "Purchased customer orders",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "customerName": { "type": "string" },
+        "shippingAddress": { "type": "object" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "shippingFee": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "paymentStatus": { "type": "string" },
+        "orderStatus": { "type": "string" },
+        "trackingNumber": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "coupons": {
+      "title": "Coupons",
+      "description": "Promotional discount codes",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "discountPercent": { "type": "number" },
+        "minOrderAmount": { "type": "number" },
+        "active": { "type": "boolean" },
+        "expiryDate": { "type": "string" }
+      }
+    },
+    "banners": {
+      "title": "Banners",
+      "description": "Homepage hero promotional banners",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "image": { "type": "string" },
+        "linkCategory": { "type": "string" },
+        "active": { "type": "boolean" }
+      }
+    },
+    "reviews": {
+      "title": "Reviews",
+      "description": "Customer ratings and feedback",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "users": {
+      "title": "Users",
+      "description": "User profiles and addresses",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string" },
+        "phone": { "type": "string" },
+        "addresses": { "type": "array" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Global store configuration",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "currency": { "type": "string" },
+        "shippingFee": { "type": "number" },
+        "freeShippingThreshold": { "type": "number" },
+        "adminEmail": { "type": "string" }
+      }
+    }
+  }
+}
