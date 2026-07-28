@@ -212,14 +212,26 @@ export const AdminDashboard: React.FC = () => {
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Auto-register custom typed category or brand if not already present in list
+    const categoryName = prodForm.category.trim();
+    const brandName = prodForm.brand.trim();
+
+    if (categoryName && !categories.some(c => c.name.toLowerCase() === categoryName.toLowerCase())) {
+      await addCategory({ name: categoryName, description: 'Custom Category' });
+    }
+    if (brandName && !brands.some(b => b.name.toLowerCase() === brandName.toLowerCase())) {
+      await addBrand({ name: brandName });
+    }
+
     if (editingProduct) {
       await updateProduct(editingProduct.id, {
         name: prodForm.name,
         description: prodForm.description,
         price: Number(prodForm.price),
         compareAtPrice: Number(prodForm.compareAtPrice),
-        category: prodForm.category,
-        brand: prodForm.brand,
+        category: categoryName || 'General',
+        brand: brandName || 'UTRA',
         images: prodForm.images,
         stock: Number(prodForm.stock),
         sku: prodForm.sku,
@@ -231,8 +243,8 @@ export const AdminDashboard: React.FC = () => {
         description: prodForm.description,
         price: Number(prodForm.price),
         compareAtPrice: Number(prodForm.compareAtPrice),
-        category: prodForm.category,
-        brand: prodForm.brand,
+        category: categoryName || 'General',
+        brand: brandName || 'UTRA',
         images: prodForm.images,
         stock: Number(prodForm.stock),
         sku: prodForm.sku,
@@ -1105,28 +1117,61 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Category</label>
-                  <select
-                    value={prodForm.category}
-                    onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl font-bold"
-                  >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-800 text-xs">Category</label>
+                    <span className="text-[10px] text-indigo-600 font-bold">Choose OR Type</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <select
+                      value={prodForm.category}
+                      onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl font-bold text-xs"
+                    >
+                      <option value="">-- Choose Existing Category --</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Or type custom category name..."
+                      value={prodForm.category}
+                      onChange={(e) => setProdForm({ ...prodForm, category: e.target.value })}
+                      className="w-full p-2 bg-white border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Brand</label>
-                  <input
-                    value={prodForm.brand}
-                    onChange={(e) => setProdForm({ ...prodForm, brand: e.target.value })}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-800 text-xs">Brand / Type</label>
+                    <span className="text-[10px] text-indigo-600 font-bold">Choose OR Type</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <select
+                      value={prodForm.brand}
+                      onChange={(e) => setProdForm({ ...prodForm, brand: e.target.value })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl font-bold text-xs"
+                    >
+                      <option value="">-- Choose Existing Brand --</option>
+                      {brands.map((b) => (
+                        <option key={b.id} value={b.name}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Or type custom brand/type name..."
+                      value={prodForm.brand}
+                      onChange={(e) => setProdForm({ ...prodForm, brand: e.target.value })}
+                      className="w-full p-2 bg-white border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
                 </div>
               </div>
 

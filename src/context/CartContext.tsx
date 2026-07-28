@@ -27,7 +27,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { settings, coupons } = useStore();
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
-      const saved = localStorage.getItem('pulseshop_cart');
+      const saved = localStorage.getItem('utrastore_cart') || localStorage.getItem('pulseshop_cart');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -36,7 +36,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [wishlist, setWishlist] = useState<Product[]>(() => {
     try {
-      const saved = localStorage.getItem('pulseshop_wishlist');
+      const saved = localStorage.getItem('utrastore_wishlist') || localStorage.getItem('pulseshop_wishlist');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -47,7 +47,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     try {
-      localStorage.setItem('pulseshop_cart', JSON.stringify(cart));
+      localStorage.setItem('utrastore_cart', JSON.stringify(cart));
     } catch (e) {
       console.warn('LocalStorage save cart error:', e);
     }
@@ -55,7 +55,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     try {
-      localStorage.setItem('pulseshop_wishlist', JSON.stringify(wishlist));
+      localStorage.setItem('utrastore_wishlist', JSON.stringify(wishlist));
     } catch (e) {
       console.warn('LocalStorage save wishlist error:', e);
     }

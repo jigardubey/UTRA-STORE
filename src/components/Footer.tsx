@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Truck, RefreshCw, Headphones, CreditCard, Lock } from 'lucide-react';
+import { Shield, Truck, RefreshCw, Lock, Phone, Mail, MapPin, MessageSquare } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 export const Footer: React.FC = () => {
@@ -44,20 +44,45 @@ export const Footer: React.FC = () => {
             <Lock className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-white text-xs font-bold uppercase tracking-wider">Razorpay & UPI Secure</h4>
+            <h4 className="text-white text-xs font-bold uppercase tracking-wider">FamPay & UPI Secure</h4>
             <p className="text-[11px] text-slate-400">256-bit SSL encrypted checkout</p>
           </div>
         </div>
       </div>
 
-      {/* Main Footer Links */}
+      {/* Main Footer Links & Owner Card */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
-        <div>
-          <h3 className="text-white font-bold text-base mb-3">{settings.storeName.split(' - ')[0]}</h3>
-          <p className="text-slate-400 leading-relaxed mb-4">
-            Your destination for premium electronics, fashion drops, smart wearables, and daily lifestyle essentials.
+        {/* Col 1: Store Intro & Owner */}
+        <div className="space-y-3">
+          <h3 className="text-white font-black text-base">{settings.storeName.split(' - ')[0]}</h3>
+          <p className="text-slate-400 leading-relaxed">
+            Your destination for premium electronics, smart wearables, fashion drops, and daily lifestyle essentials.
           </p>
-          <p className="text-slate-500 font-medium">Customer Support: support@{settings.storeName.toLowerCase().replace(/[^a-z]/g, '')}.com</p>
+
+          <div className="p-3 bg-slate-800/80 border border-slate-700/80 rounded-2xl space-y-2">
+            <div className="font-bold text-white text-xs flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Store Manager: Jigar Dubey
+            </div>
+            <div className="space-y-1 text-slate-300 text-[11px]">
+              <a href="tel:8601509472" className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
+                <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-mono font-bold">+91 8601509472</span>
+              </a>
+              <a href="https://wa.me/918601509472" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                <span>WhatsApp: +91 8601509472</span>
+              </a>
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <Mail className="w-3.5 h-3.5 text-indigo-400" />
+                <span>jigardubey2806@gmail.com</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <MapPin className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Varanasi, UP, India</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -71,31 +96,32 @@ export const Footer: React.FC = () => {
         </div>
 
         <div>
-          <h4 className="text-white font-semibold uppercase text-xs tracking-wider mb-3">Customer Service</h4>
+          <h4 className="text-white font-semibold uppercase text-xs tracking-wider mb-3">Customer Service & Help</h4>
           <ul className="space-y-2 text-slate-400">
             <li><a href="#" className="hover:text-white transition-colors">Track Your Order</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Shipping & Delivery Policy</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Returns & Refunds</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Terms of Service & Privacy</a></li>
+            <li><a href="#" className="hover:text-white transition-colors">FamPay / UPI Payment Guide</a></li>
+            <li><a href="#" className="hover:text-white transition-colors">Returns & Refunds Policy</a></li>
+            <li><a href="#" className="hover:text-white transition-colors">Contact Jigar Dubey (+91 8601509472)</a></li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-white font-semibold uppercase text-xs tracking-wider mb-3">Accepted Payment Gateways</h4>
-          <p className="text-slate-400 mb-3">We accept all major payment methods including Instant UPI QR, Credit/Debit cards, Netbanking, and Cash on Delivery.</p>
+          <p className="text-slate-400 mb-3">We accept all major payment methods including Instant FamPay UPI QR, Credit/Debit cards, Netbanking, and Cash on Delivery.</p>
           <div className="flex flex-wrap gap-2 text-[10px] font-bold">
-            <span className="px-2 py-1 bg-slate-800 text-indigo-300 rounded-md border border-slate-700">Razorpay</span>
-            <span className="px-2 py-1 bg-slate-800 text-emerald-300 rounded-md border border-slate-700">UPI / BHIM</span>
-            <span className="px-2 py-1 bg-slate-800 text-amber-300 rounded-md border border-slate-700">GPay / PhonePe</span>
-            <span className="px-2 py-1 bg-slate-800 text-blue-300 rounded-md border border-slate-700">VISA / MasterCard</span>
+            <span className="px-2 py-1 bg-slate-800 text-indigo-300 rounded-md border border-slate-700">FamPay UPI</span>
+            <span className="px-2 py-1 bg-slate-800 text-emerald-300 rounded-md border border-slate-700">GPay / PhonePe</span>
+            <span className="px-2 py-1 bg-slate-800 text-amber-300 rounded-md border border-slate-700">Razorpay</span>
+            <span className="px-2 py-1 bg-slate-800 text-blue-300 rounded-md border border-slate-700">Cards & Banking</span>
             <span className="px-2 py-1 bg-slate-800 text-gray-300 rounded-md border border-slate-700">COD</span>
           </div>
         </div>
       </div>
 
       {/* Bottom Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-slate-800 text-center text-[11px] text-slate-500">
-        © {new Date().getFullYear()} {settings.storeName.split(' - ')[0]}. Built with Firebase Firestore & React.
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-slate-800 text-center text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div>© {new Date().getFullYear()} <strong className="text-slate-300 font-bold">UTRA STORE</strong>. All rights reserved.</div>
+        <div>Owner: <span className="text-slate-300 font-bold">Jigar Dubey</span> (+91 8601509472)</div>
       </div>
     </footer>
   );

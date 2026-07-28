@@ -1,6 +1,6 @@
 {
-  "name": "Shopify-Style E-Commerce Hub",
-  "description": "Full-stack E-Commerce platform with Admin Dashboard, Customer Storefront, Razorpay/UPI/COD payments, Firestore database, product catalog, cart, orders, coupons, and analytics.",
+  "name": "UTRA STORE",
+  "description": "Premium E-Commerce Store with FamPay/UPI Payments, Fast Delivery, Product Catalog, Admin Dashboard, and Order Tracking.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

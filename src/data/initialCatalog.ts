@@ -1,7 +1,7 @@
 import { Product, Category, Brand, Coupon, Banner, StoreSettings } from '../types';
 
 export const INITIAL_SETTINGS: StoreSettings = {
-  storeName: 'PulseShop - Everything Digital & Style',
+  storeName: 'UTRA STORE - Official Online Store',
   currency: '₹',
   shippingFee: 50,
   freeShippingThreshold: 999,

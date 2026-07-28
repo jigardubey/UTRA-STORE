@@ -14,6 +14,7 @@ import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
 import { BannerSlider } from '../BannerSlider';
 import { ProductCard } from '../ProductCard';
+import { ContactFaqFeedback } from './ContactFaqFeedback';
 
 interface StorefrontViewProps {
   searchQuery: string;
@@ -82,33 +83,59 @@ export const StorefrontView: React.FC<StorefrontViewProps> = ({
         <BannerSlider onSelectCategory={setSelectedCategory} />
       )}
 
-      {/* Category Pills & Controls Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
-        {/* Category horizontal scrolling bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
-          <button
-            onClick={() => setSelectedCategory('All')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              selectedCategory === 'All'
-                ? 'bg-slate-900 text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All Items ({products.length})
-          </button>
-          {categories.map((cat) => (
+      {/* Category Pills & Select / Type Options */}
+      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* Category horizontal scrolling bar */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full flex-1 min-w-[280px]">
             <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.name)}
+              onClick={() => setSelectedCategory('All')}
               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                selectedCategory === cat.name
+                selectedCategory === 'All'
                   ? 'bg-slate-900 text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {cat.name}
+              All Items ({products.length})
             </button>
-          ))}
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.name)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  selectedCategory === cat.name
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Category Select & Type Inputs */}
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="py-1.5 px-3 bg-white border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500 shadow-2xs"
+            >
+              <option value="All">-- Choose Category --</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              placeholder="Or type category..."
+              value={selectedCategory === 'All' ? '' : selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value || 'All')}
+              className="py-1.5 px-3 bg-indigo-50/60 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 placeholder:text-indigo-400 focus:ring-2 focus:ring-indigo-500 w-36 sm:w-44"
+            />
+          </div>
         </div>
 
         {/* View & Filter Toggles */}
@@ -301,6 +328,9 @@ export const StorefrontView: React.FC<StorefrontViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Customer Feedback, Contact Details & Q&A Section */}
+      <ContactFaqFeedback />
     </div>
   );
 };

@@ -60,17 +60,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-6">
             <button
               onClick={() => setView('store')}
-              className="flex items-center gap-2 text-left group"
+              className="flex items-center gap-2.5 text-left group"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform">
-                <Store className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform border border-indigo-400/30 relative overflow-hidden">
+                <span className="font-black text-xl font-mono tracking-tighter text-amber-300 drop-shadow-xs">U</span>
+                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-amber-400 rounded-full border-2 border-white" />
               </div>
               <div>
-                <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-gray-900 via-indigo-950 to-gray-800 bg-clip-text text-transparent">
-                  {settings.storeName.split(' - ')[0]}
+                <span className="font-black text-xl tracking-tight bg-gradient-to-r from-gray-900 via-indigo-950 to-indigo-700 bg-clip-text text-transparent block leading-none">
+                  UTRA STORE
                 </span>
-                <span className="hidden sm:block text-[10px] text-gray-500 font-medium tracking-wide uppercase">
-                  Official Store
+                <span className="hidden sm:block text-[9px] text-indigo-600 font-extrabold tracking-widest uppercase mt-0.5">
+                  Official Online Hub
                 </span>
               </div>
             </button>
