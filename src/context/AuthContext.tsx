@@ -13,6 +13,7 @@ import { auth, googleProvider, db } from '../lib/firebase';
 import { UserProfile } from '../types';
 
 const ADMIN_EMAILS = ['jigardubey811@gmail.com', 'jigardubey2806@gmail.com'];
+const ADMIN_PINS = ['8601', '2806', '1234', '8601509472'];
 
 interface AuthContextType {
   currentUser: User | null;
@@ -25,7 +26,7 @@ interface AuthContextType {
   signupWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   loginAsGuest: () => void;
-  loginAsAdminDirect: (email?: string) => void;
+  loginAsAdminWithPin: (pin: string) => boolean;
   logout: () => Promise<void>;
   toggleAdminOverride: () => void;
 }
@@ -98,17 +99,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = async () => {
     setIsGuest(false);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const res = await signInWithPopup(auth, googleProvider);
+      if (res.user) {
+        await syncUserProfile(res.user);
+      }
     } catch (err: any) {
       console.warn('Firebase Google Auth Popup warning:', err?.code || err);
-      // Fallback: If popup is blocked or domain is unauthorized in Firebase Console, auto log-in smoothly as Google user
-      const fallbackEmail = 'jigardubey2806@gmail.com';
+      // Fallback: Create normal customer profile for Google sign in if popup blocked
       const fallbackUid = 'google-user-' + Date.now();
       const profile: UserProfile = {
         uid: fallbackUid,
-        email: fallbackEmail,
-        displayName: 'Jigar Dubey (Google User)',
-        role: 'admin',
+        email: 'customer@utrastore.com',
+        displayName: 'Google Customer',
+        role: 'customer',
         addresses: [],
         createdAt: new Date().toISOString(),
       };
@@ -119,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Firestore fallback setDoc error:', e);
       }
       setUserProfile(profile);
-      setAdminOverride(true);
+      setAdminOverride(false);
     }
   };
 
@@ -132,13 +135,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signInWithEmailAndPassword(auth, cleanEmail, pass);
     } catch (err: any) {
       console.warn('Firebase Email Sign-In fallback engaged:', err?.code || err);
-      // Fail-safe: If Email/Pass is disabled in Firebase Console or user not found, perform instant login
+      // Fail-safe: Create customer profile (or admin profile ONLY IF pass matches secret owner PIN)
+      const isPinMatch = ADMIN_PINS.includes(pass.trim());
       const fallbackUid = 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
       const profile: UserProfile = {
         uid: fallbackUid,
         email: cleanEmail,
         displayName: cleanEmail.split('@')[0],
-        role: isUserAdmin ? 'admin' : 'customer',
+        role: (isUserAdmin && isPinMatch) ? 'admin' : 'customer',
         addresses: [],
         createdAt: new Date().toISOString(),
       };
@@ -150,14 +154,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUserProfile(profile);
-      if (isUserAdmin) setAdminOverride(true);
+      if (isUserAdmin && isPinMatch) setAdminOverride(true);
+      else setAdminOverride(false);
     }
   };
 
   const signupWithEmail = async (email: string, pass: string, name: string) => {
     setIsGuest(false);
     const cleanEmail = email.trim().toLowerCase();
-    const isUserAdmin = ADMIN_EMAILS.includes(cleanEmail);
 
     try {
       const res = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
@@ -167,23 +171,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         uid: res.user.uid,
         email: cleanEmail,
         displayName: name,
-        role: isUserAdmin ? 'admin' : 'customer',
+        role: 'customer',
         addresses: [],
         createdAt: new Date().toISOString(),
       };
 
       await setDoc(userDocRef, profile);
       setUserProfile(profile);
-      if (isUserAdmin) setAdminOverride(true);
+      setAdminOverride(false);
     } catch (err: any) {
       console.warn('Firebase Signup fallback engaged:', err?.code || err);
-      // Fail-safe registration
+      // Fail-safe customer registration
       const fallbackUid = 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
       const profile: UserProfile = {
         uid: fallbackUid,
         email: cleanEmail,
         displayName: name || cleanEmail.split('@')[0],
-        role: isUserAdmin ? 'admin' : 'customer',
+        role: 'customer',
         addresses: [],
         createdAt: new Date().toISOString(),
       };
@@ -195,7 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUserProfile(profile);
-      if (isUserAdmin) setAdminOverride(true);
+      setAdminOverride(false);
     }
   };
 
@@ -210,6 +214,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginAsGuest = () => {
     setIsGuest(true);
     setCurrentUser(null);
+    setAdminOverride(false);
     setUserProfile({
       uid: 'guest-' + Math.random().toString(36).substring(2, 9),
       email: 'guest@utrastore.com',
@@ -220,18 +225,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const loginAsAdminDirect = (email?: string) => {
-    const adminEmail = email || 'jigardubey2806@gmail.com';
-    setIsGuest(false);
-    setAdminOverride(true);
-    setUserProfile({
-      uid: 'admin-jigar-' + Date.now(),
-      email: adminEmail,
-      displayName: 'Jigar Dubey (Store Admin)',
-      role: 'admin',
-      addresses: [],
-      createdAt: new Date().toISOString(),
-    });
+  const loginAsAdminWithPin = (pin: string): boolean => {
+    if (ADMIN_PINS.includes(pin.trim())) {
+      setIsGuest(false);
+      setAdminOverride(true);
+      setUserProfile({
+        uid: 'admin-jigar-' + Date.now(),
+        email: 'jigardubey2806@gmail.com',
+        displayName: 'Jigar Dubey (Store Admin)',
+        role: 'admin',
+        addresses: [],
+        createdAt: new Date().toISOString(),
+      });
+      return true;
+    }
+    return false;
   };
 
   const logout = async () => {
@@ -251,11 +259,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAdminOverride((prev) => !prev);
   };
 
-  const calculatedIsAdmin =
-    adminOverride ||
-    userProfile?.role === 'admin' ||
-    (currentUser?.email ? ADMIN_EMAILS.includes(currentUser.email.toLowerCase()) : false) ||
-    (userProfile?.email ? ADMIN_EMAILS.includes(userProfile.email.toLowerCase()) : false);
+  const calculatedIsAdmin = adminOverride && userProfile?.role === 'admin';
 
   return (
     <AuthContext.Provider
@@ -270,7 +274,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signupWithEmail,
         resetPassword,
         loginAsGuest,
-        loginAsAdminDirect,
+        loginAsAdminWithPin,
         logout,
         toggleAdminOverride,
       }}
