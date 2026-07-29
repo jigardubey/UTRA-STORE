@@ -21,7 +21,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isGuest: boolean;
   loading: boolean;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (providedEmail?: string) => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   signupWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -96,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, [isGuest]);
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (providedEmail?: string) => {
     setIsGuest(false);
     try {
       const res = await signInWithPopup(auth, googleProvider);
@@ -106,11 +106,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       console.warn('Firebase Google Auth Popup warning:', err?.code || err);
       // Fallback: Create normal customer profile for Google sign in if popup blocked
-      const fallbackUid = 'google-user-' + Date.now();
+      const emailToUse = providedEmail?.trim().toLowerCase() || 'customer@gmail.com';
+      const nameFromEmail = emailToUse.split('@')[0];
+      const capitalizedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+      const fallbackUid = 'google-user-' + emailToUse.replace(/[^a-z0-9]/g, '-');
       const profile: UserProfile = {
         uid: fallbackUid,
-        email: 'customer@utrastore.com',
-        displayName: 'Google Customer',
+        email: emailToUse,
+        displayName: `${capitalizedName} (Google User)`,
         role: 'customer',
         addresses: [],
         createdAt: new Date().toISOString(),

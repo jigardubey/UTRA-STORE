@@ -59,10 +59,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleGoogle = async () => {
     setError('');
     try {
-      await loginWithGoogle();
+      await loginWithGoogle(email || undefined);
       onClose();
     } catch (err: any) {
-      onClose();
+      console.warn('Google login error:', err);
+      if (email) {
+        await loginWithGoogle(email);
+        onClose();
+      } else {
+        setError('Google login popup was blocked or domain not whitelisted. Please enter your email address in the box above and click Continue with Google.');
+      }
     }
   };
 

@@ -13,6 +13,12 @@ export interface Product {
   reviewsCount: number;
   isFeatured?: boolean;
   tags?: string[];
+  supplierName?: string;
+  supplierPhone?: string;
+  supplierEmail?: string;
+  supplierWholesalePrice?: number;
+  supplierAddress?: string;
+  supplierNotes?: string;
   createdAt: string;
 }
 

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { PackageCheck, Truck, ArrowLeft, Clock, Eye, RefreshCw } from 'lucide-react';
+import { PackageCheck, Truck, ArrowLeft, Clock, Eye, RefreshCw, FileText } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { Order } from '../../types';
 import { OrderTrackingModal } from '../OrderTrackingModal';
+import { InvoiceModal } from '../InvoiceModal';
 
 interface OrderHistoryViewProps {
   onBack: () => void;
@@ -13,15 +14,29 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ onBack }) =>
   const { orders, settings } = useStore();
   const { currentUser, userProfile } = useAuth();
   const [selectedOrderForTracking, setSelectedOrderForTracking] = useState<Order | null>(null);
+  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<Order | null>(null);
 
-  // Filter orders belonging to current logged in user or show all if guest/demo
-  const userOrders = orders.filter(
-    (o) =>
-      o.userId === currentUser?.uid ||
-      o.customerEmail === currentUser?.email ||
-      o.customerEmail === userProfile?.email ||
-      !currentUser // Show orders if guest user placed order recently
-  );
+  // Filter orders strictly belonging to the currently logged in user account
+  const activeEmail = (userProfile?.email || currentUser?.email || '').toLowerCase().trim();
+  const activeUid = userProfile?.uid || currentUser?.uid;
+
+  const userOrders = orders.filter((o) => {
+    // If user is logged in (has email or uid)
+    if (activeEmail || activeUid) {
+      const orderEmail = (o.customerEmail || '').toLowerCase().trim();
+      const matchUid = Boolean(activeUid && o.userId === activeUid);
+      const matchEmail = Boolean(activeEmail && orderEmail === activeEmail);
+      return matchUid || matchEmail;
+    }
+
+    // Guest mode: only show orders placed in this specific guest browser session
+    try {
+      const guestOrderIds = JSON.parse(localStorage.getItem('guest_order_ids') || '[]');
+      return Array.isArray(guestOrderIds) && guestOrderIds.includes(o.id);
+    } catch {
+      return false;
+    }
+  });
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16 animate-fade-in">
@@ -101,12 +116,20 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ onBack }) =>
                   <span className="text-[10px] text-gray-400 font-semibold ml-2 uppercase">({order.paymentMethod})</span>
                 </div>
 
-                <button
-                  onClick={() => setSelectedOrderForTracking(order)}
-                  className="py-2 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl flex items-center gap-1.5 transition-colors"
-                >
-                  <Truck className="w-4 h-4 text-indigo-600" /> Track Package & Details
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedOrderForInvoice(order)}
+                    className="py-2 px-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+                  >
+                    <FileText className="w-4 h-4 text-indigo-600" /> GST Invoice
+                  </button>
+                  <button
+                    onClick={() => setSelectedOrderForTracking(order)}
+                    className="py-2 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+                  >
+                    <Truck className="w-4 h-4 text-indigo-600" /> Track Package
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -116,6 +139,11 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({ onBack }) =>
       <OrderTrackingModal
         order={selectedOrderForTracking}
         onClose={() => setSelectedOrderForTracking(null)}
+      />
+
+      <InvoiceModal
+        order={selectedOrderForInvoice}
+        onClose={() => setSelectedOrderForInvoice(null)}
       />
     </div>
   );

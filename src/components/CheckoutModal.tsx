@@ -44,7 +44,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleCreateOrder = async (
     paymentDetails?: { method: 'razorpay' | 'upi' | 'qr'; transactionId: string }
   ) => {
-    if (!currentUser) {
+    if (!currentUser && !userProfile) {
       if (onOpenAuthModal) onOpenAuthModal();
       return;
     }
@@ -58,10 +58,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       image: item.product.images[0],
     }));
 
+    const activeUid = userProfile?.uid || currentUser?.uid || 'user-' + Date.now();
+    const activeEmail = userProfile?.email || currentUser?.email || 'customer@utrastore.com';
+    const activeName = address.fullName || userProfile?.displayName || currentUser?.displayName || 'Valued Customer';
+
     const newOrder = await placeOrder({
-      userId: currentUser.uid,
-      customerEmail: currentUser.email || userProfile?.email || 'customer@store.com',
-      customerName: address.fullName || currentUser.displayName || 'Valued Customer',
+      userId: activeUid,
+      customerEmail: activeEmail,
+      customerName: activeName,
       shippingAddress: address,
       items: orderItems,
       subtotal,
@@ -74,6 +78,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       trackingNumber: '',
     });
 
+    try {
+      const existingGuestOrders = JSON.parse(localStorage.getItem('guest_order_ids') || '[]');
+      localStorage.setItem('guest_order_ids', JSON.stringify([...existingGuestOrders, newOrder.id]));
+    } catch (e) {
+      console.warn('LocalStorage save error:', e);
+    }
+
     clearCart();
     setCompletedOrder(newOrder);
     setIsSubmitting(false);
@@ -82,7 +93,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const handleProceedPayment = () => {
-    if (!currentUser) {
+    if (!currentUser && !userProfile) {
       if (onOpenAuthModal) onOpenAuthModal();
       return;
     }
@@ -157,7 +168,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {/* STEP 1: Shipping Address */}
           {step === 1 && (
             <div className="space-y-4">
-              {!currentUser && (
+              {!currentUser && !userProfile && (
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs animate-fade-in">
                   <div className="flex items-center gap-2 text-amber-900 font-semibold">
                     <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
@@ -244,7 +255,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <div className="pt-4 border-t border-gray-100 flex justify-end">
                 <button
                   onClick={() => {
-                    if (!currentUser) {
+                    if (!currentUser && !userProfile) {
                       if (onOpenAuthModal) onOpenAuthModal();
                     } else {
                       setStep(2);
@@ -253,7 +264,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   disabled={!address.fullName || !address.street}
                   className="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2"
                 >
-                  <span>{!currentUser ? 'Sign In / Register to Pay' : 'Continue to Payment'}</span>
+                  <span>{!currentUser && !userProfile ? 'Sign In / Register to Pay' : 'Continue to Payment'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

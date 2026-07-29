@@ -127,6 +127,11 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 124,
     isFeatured: true,
     tags: ['Audio', 'Noise Canceling', 'Wireless'],
+    supplierName: 'Delhi Audio Wholesalers Hub',
+    supplierPhone: '+919876543210',
+    supplierEmail: 'orders@delhiaudiohub.com',
+    supplierWholesalePrice: 21500,
+    supplierNotes: 'Ships via Bluedart in 24 hours. Contact Mr. Rajesh (+91 9876543210)',
     createdAt: new Date().toISOString(),
   },
   {

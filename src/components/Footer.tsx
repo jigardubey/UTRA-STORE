@@ -1,9 +1,11 @@
-import React from 'react';
-import { Shield, Truck, RefreshCw, Lock, Phone, Mail, MapPin, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, Truck, RefreshCw, Lock, Phone, Mail, MapPin, MessageSquare, FileText } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { PolicyModal } from './PolicyModal';
 
 export const Footer: React.FC = () => {
   const { settings } = useStore();
+  const [policyTab, setPolicyTab] = useState<'privacy' | 'terms' | 'refund' | 'security' | null>(null);
 
   return (
     <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
@@ -96,12 +98,28 @@ export const Footer: React.FC = () => {
         </div>
 
         <div>
-          <h4 className="text-white font-semibold uppercase text-xs tracking-wider mb-3">Customer Service & Help</h4>
+          <h4 className="text-white font-semibold uppercase text-xs tracking-wider mb-3">Customer Service & Policies</h4>
           <ul className="space-y-2 text-slate-400">
-            <li><a href="#" className="hover:text-white transition-colors">Track Your Order</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">FamPay / UPI Payment Guide</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Returns & Refunds Policy</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Contact Jigar Dubey (+91 8601509472)</a></li>
+            <li>
+              <button onClick={() => setPolicyTab('refund')} className="hover:text-white transition-colors text-left">
+                Returns & Refunds Policy
+              </button>
+            </li>
+            <li>
+              <button onClick={() => setPolicyTab('privacy')} className="hover:text-white transition-colors text-left">
+                Privacy Policy & Security
+              </button>
+            </li>
+            <li>
+              <button onClick={() => setPolicyTab('terms')} className="hover:text-white transition-colors text-left">
+                Terms & Conditions
+              </button>
+            </li>
+            <li>
+              <button onClick={() => setPolicyTab('security')} className="hover:text-amber-300 transition-colors text-left font-bold text-slate-300">
+                Merchant Trust & Certification
+              </button>
+            </li>
           </ul>
         </div>
 
@@ -123,6 +141,12 @@ export const Footer: React.FC = () => {
         <div>© {new Date().getFullYear()} <strong className="text-slate-300 font-bold">UTRA STORE</strong>. All rights reserved.</div>
         <div>Owner: <span className="text-slate-300 font-bold">Jigar Dubey</span> (+91 8601509472)</div>
       </div>
+
+      <PolicyModal
+        isOpen={Boolean(policyTab)}
+        onClose={() => setPolicyTab(null)}
+        initialTab={policyTab || 'privacy'}
+      />
     </footer>
   );
 };

@@ -25,7 +25,9 @@ import {
   Percent,
   Upload,
   CreditCard,
+  Bot,
 } from 'lucide-react';
+import { AIDropshippingHub } from './AIDropshippingHub';
 import {
   AreaChart,
   Area,
@@ -36,9 +38,11 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useStore } from '../../context/StoreContext';
+import { useAuth } from '../../context/AuthContext';
 import { Product, Order, Coupon, Banner, StoreSettings } from '../../types';
 
 export const AdminDashboard: React.FC = () => {
+  const { isAdmin } = useAuth();
   const {
     products,
     categories,
@@ -62,9 +66,21 @@ export const AdminDashboard: React.FC = () => {
     updateSettings,
   } = useStore();
 
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 max-w-xl mx-auto shadow-sm p-8 my-10 animate-fade-in">
+        <Shield className="w-16 h-16 text-rose-500 mx-auto mb-4" />
+        <h2 className="text-xl font-black text-gray-900 mb-2">Private Store Owner Access Only</h2>
+        <p className="text-xs text-gray-500 mb-6">
+          The UTRA STORE Admin Dashboard is protected. Please log in using the Store Owner Secret PIN from the account menu to manage products and orders.
+        </p>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<
-    'analytics' | 'products' | 'categories' | 'inventory' | 'orders' | 'coupons' | 'banners' | 'settings'
-  >('analytics');
+    'analytics' | 'dropshipping' | 'products' | 'categories' | 'inventory' | 'orders' | 'coupons' | 'banners' | 'settings'
+  >('dropshipping');
 
   // Search & Filters State
   const [productSearch, setProductSearch] = useState('');
@@ -350,6 +366,7 @@ export const AdminDashboard: React.FC = () => {
       {/* Admin Navigation Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 border-b border-gray-100 text-xs font-bold">
         {[
+          { id: 'dropshipping', label: 'AI Dropshipping & Supplier Hub', icon: Bot },
           { id: 'analytics', label: 'Dashboard & Revenue', icon: TrendingUp },
           { id: 'products', label: `Products (${products.length})`, icon: Package },
           { id: 'orders', label: `Orders (${orders.length})`, icon: ShoppingBag },
@@ -375,6 +392,9 @@ export const AdminDashboard: React.FC = () => {
           );
         })}
       </div>
+
+      {/* TAB 0: AI DROPSHIPPING & SUPPLIER AUTOMATION */}
+      {activeTab === 'dropshipping' && <AIDropshippingHub />}
 
       {/* TAB 1: ANALYTICS */}
       {activeTab === 'analytics' && (
