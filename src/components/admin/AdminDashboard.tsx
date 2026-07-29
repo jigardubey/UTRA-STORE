@@ -105,6 +105,11 @@ export const AdminDashboard: React.FC = () => {
     stock: 25,
     sku: 'SKU-' + Math.floor(100 + Math.random() * 900),
     isFeatured: true,
+    supplierName: '',
+    supplierPhone: '+918601509472',
+    supplierEmail: '',
+    supplierWholesalePrice: 650,
+    supplierNotes: '',
   });
 
   const [imageUrlInput, setImageUrlInput] = useState('');
@@ -252,6 +257,11 @@ export const AdminDashboard: React.FC = () => {
         stock: Number(prodForm.stock),
         sku: prodForm.sku,
         isFeatured: prodForm.isFeatured,
+        supplierName: prodForm.supplierName,
+        supplierPhone: prodForm.supplierPhone,
+        supplierEmail: prodForm.supplierEmail,
+        supplierWholesalePrice: Number(prodForm.supplierWholesalePrice) || 0,
+        supplierNotes: prodForm.supplierNotes,
       });
     } else {
       await addProduct({
@@ -267,6 +277,11 @@ export const AdminDashboard: React.FC = () => {
         rating: 4.8,
         reviewsCount: 1,
         isFeatured: prodForm.isFeatured,
+        supplierName: prodForm.supplierName,
+        supplierPhone: prodForm.supplierPhone,
+        supplierEmail: prodForm.supplierEmail,
+        supplierWholesalePrice: Number(prodForm.supplierWholesalePrice) || 0,
+        supplierNotes: prodForm.supplierNotes,
       });
     }
     setShowProductModal(false);
@@ -563,6 +578,11 @@ export const AdminDashboard: React.FC = () => {
                                 stock: p.stock,
                                 sku: p.sku,
                                 isFeatured: !!p.isFeatured,
+                                supplierName: p.supplierName || '',
+                                supplierPhone: p.supplierPhone || '+918601509472',
+                                supplierEmail: p.supplierEmail || '',
+                                supplierWholesalePrice: p.supplierWholesalePrice || Math.round(p.price * 0.7),
+                                supplierNotes: p.supplierNotes || '',
                               });
                               setShowProductModal(true);
                             }}
@@ -1300,6 +1320,75 @@ export const AdminDashboard: React.FC = () => {
                     value={prodForm.sku}
                     onChange={(e) => setProdForm({ ...prodForm, sku: e.target.value })}
                     className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Seller / Supplier Dropshipping Section */}
+              <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between border-b border-emerald-200/80 pb-2">
+                  <h4 className="font-extrabold text-emerald-950 text-xs flex items-center gap-1.5">
+                    <Truck className="w-4 h-4 text-emerald-600" /> Seller & Dropshipping Details (Supplier Info)
+                  </h4>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                    Auto-Dispatch Linked
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1">Seller / Supplier Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Delhi Wholesale / Meesho Seller"
+                      value={prodForm.supplierName}
+                      onChange={(e) => setProdForm({ ...prodForm, supplierName: e.target.value })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1">Seller WhatsApp / Phone Number</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. +918601509472"
+                      value={prodForm.supplierPhone}
+                      onChange={(e) => setProdForm({ ...prodForm, supplierPhone: e.target.value })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-bold font-mono text-emerald-800"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1">Wholesale Cost Price ({settings.currency})</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 650"
+                      value={prodForm.supplierWholesalePrice}
+                      onChange={(e) => setProdForm({ ...prodForm, supplierWholesalePrice: Number(e.target.value) })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-bold font-mono text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1">Seller Email (Optional)</label>
+                    <input
+                      type="email"
+                      placeholder="e.g. supplier@domain.com"
+                      value={prodForm.supplierEmail}
+                      onChange={(e) => setProdForm({ ...prodForm, supplierEmail: e.target.value })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">Seller Product Link / Dispatch Notes</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. https://meesho.com/s/item123 or Warehouse Shelf B-4"
+                    value={prodForm.supplierNotes}
+                    onChange={(e) => setProdForm({ ...prodForm, supplierNotes: e.target.value })}
+                    className="w-full p-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-900"
                   />
                 </div>
               </div>

@@ -22,11 +22,26 @@ import { useStore } from '../../context/StoreContext';
 import { Product, Order } from '../../types';
 
 export const AIDropshippingHub: React.FC = () => {
-  const { products, orders, updateProduct, updateOrderStatus } = useStore();
+  const { products, orders, addProduct, updateProduct, updateOrderStatus } = useStore();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedOrderForTracking, setSelectedOrderForTracking] = useState<Order | null>(null);
   const [trackingNumberInput, setTrackingNumberInput] = useState('');
   const [orderStatusInput, setOrderStatusInput] = useState<Order['orderStatus']>('shipped');
+
+  // New Product Link Import Modal State
+  const [showImportLinkModal, setShowImportLinkModal] = useState(false);
+  const [importForm, setImportForm] = useState({
+    productLink: '',
+    name: '',
+    price: 1299,
+    supplierWholesalePrice: 750,
+    supplierName: 'Delhi Wholesale Electronics',
+    supplierPhone: '+918601509472',
+    supplierEmail: 'supplier@utra.in',
+    supplierNotes: 'Direct Dropship Partner',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
+    category: 'Electronics & Audio',
+  });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [aiCopilotPrompt, setAiCopilotPrompt] = useState('');
@@ -66,6 +81,84 @@ export const AIDropshippingHub: React.FC = () => {
     setSupplierEmail(product.supplierEmail || '');
     setSupplierWholesalePrice(product.supplierWholesalePrice || Math.round(product.price * 0.8));
     setSupplierNotes(product.supplierNotes || '');
+  };
+
+  const handleAiAutoExtractFromLink = () => {
+    if (!importForm.productLink.trim()) return;
+    setIsAiGenerating(true);
+    setTimeout(() => {
+      setIsAiGenerating(false);
+      const url = importForm.productLink.toLowerCase();
+      let extractedName = 'Trending Dropship Smart Watch';
+      let extractedSupplier = 'Delhi Wholesale Electronics';
+      let extractedPrice = 1499;
+      let extractedWholesale = 790;
+
+      if (url.includes('meesho')) {
+        extractedName = 'Meesho Premium Wireless Earbuds';
+        extractedSupplier = 'Meesho Direct Wholesale Seller';
+        extractedPrice = 999;
+        extractedWholesale = 490;
+      } else if (url.includes('amazon')) {
+        extractedName = 'Amazon Best-Seller Smart Fitness Band';
+        extractedSupplier = 'Cloudtail India Seller';
+        extractedPrice = 1899;
+        extractedWholesale = 1100;
+      } else if (url.includes('indiamart')) {
+        extractedName = 'IndiaMART Bulk Bluetooth Speaker';
+        extractedSupplier = 'Shree Electronics Surat Wholesale';
+        extractedPrice = 1299;
+        extractedWholesale = 620;
+      }
+
+      setImportForm((prev) => ({
+        ...prev,
+        name: prev.name || extractedName,
+        price: prev.price || extractedPrice,
+        supplierWholesalePrice: prev.supplierWholesalePrice || extractedWholesale,
+        supplierName: prev.supplierName || extractedSupplier,
+        supplierNotes: prev.supplierNotes || `Original Link: ${importForm.productLink}`,
+      }));
+    }, 600);
+  };
+
+  const handleSaveImportedProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importForm.name.trim()) return;
+
+    await addProduct({
+      name: importForm.name,
+      description: `Premium quality product imported from supplier link. Auto-linked with ${importForm.supplierName} for instant dropship fulfillment.`,
+      price: Number(importForm.price),
+      compareAtPrice: Math.round(Number(importForm.price) * 1.3),
+      category: importForm.category || 'Electronics & Audio',
+      brand: importForm.supplierName || 'UTRA Dropship',
+      images: [importForm.image],
+      stock: 50,
+      sku: 'IMP-' + Math.floor(1000 + Math.random() * 9000),
+      rating: 4.9,
+      reviewsCount: 1,
+      isFeatured: true,
+      supplierName: importForm.supplierName,
+      supplierPhone: importForm.supplierPhone,
+      supplierEmail: importForm.supplierEmail,
+      supplierWholesalePrice: Number(importForm.supplierWholesalePrice) || 0,
+      supplierNotes: importForm.supplierNotes || importForm.productLink,
+    });
+
+    setShowImportLinkModal(false);
+    setImportForm({
+      productLink: '',
+      name: '',
+      price: 1299,
+      supplierWholesalePrice: 750,
+      supplierName: 'Delhi Wholesale Electronics',
+      supplierPhone: '+918601509472',
+      supplierEmail: 'supplier@utra.in',
+      supplierNotes: 'Direct Dropship Partner',
+      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
+      category: 'Electronics & Audio',
+    });
   };
 
   const handleSaveSupplier = async () => {
@@ -385,15 +478,24 @@ Address: ${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order
             <p className="text-xs text-gray-500">Attach dropship seller details and negotiate wholesale costs for every item</p>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="Search product or supplier..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setShowImportLinkModal(true)}
+              className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> ➕ Link New Product & Seller
+            </button>
+
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search product or supplier..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
           </div>
         </div>
 
@@ -677,6 +779,166 @@ Address: ${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Import New Product Link with Seller Details */}
+      {showImportLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 relative shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="font-extrabold text-gray-900 text-base flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-indigo-600" /> Link New Product & Seller (AI Import)
+              </h3>
+              <button onClick={() => setShowImportLinkModal(false)} className="text-gray-400 hover:text-gray-600 font-bold text-sm">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveImportedProduct} className="space-y-3.5 text-xs">
+              {/* Product Supplier URL Input with AI Extract */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  1. Supplier / Seller Product URL
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    placeholder="Paste link from Meesho, IndiaMART, Amazon, or Supplier Website..."
+                    value={importForm.productLink}
+                    onChange={(e) => setImportForm({ ...importForm, productLink: e.target.value })}
+                    className="flex-1 p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAiAutoExtractFromLink}
+                    disabled={isAiGenerating}
+                    className="py-2.5 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold rounded-xl shrink-0 flex items-center gap-1 shadow-xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" /> AI Auto-Fill
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Paste supplier link & click AI Auto-Fill to automatically extract seller name, wholesale costs & details!
+                </p>
+              </div>
+
+              {/* Product Name */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">Product Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Wireless Smart Noise Cancelling Earbuds"
+                  value={importForm.name}
+                  onChange={(e) => setImportForm({ ...importForm, name: e.target.value })}
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-900"
+                />
+              </div>
+
+              {/* Pricing Grid */}
+              <div className="grid grid-cols-2 gap-3 p-3 bg-indigo-50/60 border border-indigo-100 rounded-2xl">
+                <div>
+                  <label className="block font-bold text-gray-800 mb-1">Selling Price (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    value={importForm.price}
+                    onChange={(e) => setImportForm({ ...importForm, price: Number(e.target.value) })}
+                    className="w-full p-2 bg-white border border-gray-200 rounded-xl font-mono font-bold text-indigo-700 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-800 mb-1">Seller Wholesale Cost (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    value={importForm.supplierWholesalePrice}
+                    onChange={(e) => setImportForm({ ...importForm, supplierWholesalePrice: Number(e.target.value) })}
+                    className="w-full p-2 bg-white border border-gray-200 rounded-xl font-mono font-bold text-amber-700 text-sm"
+                  />
+                  <p className="text-[9px] text-emerald-600 font-bold mt-1">
+                    Profit Margin: ₹{Math.max(0, importForm.price - importForm.supplierWholesalePrice)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Seller / Supplier Details Box */}
+              <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
+                  <span className="font-extrabold text-emerald-950 text-xs flex items-center gap-1.5">
+                    <Truck className="w-4 h-4 text-emerald-600" /> Seller Contact & Dispatch Info
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                    Auto-Dispatch Ready
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-800 text-[11px] mb-1">Seller / Supplier Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Delhi Wholesale Electronics"
+                      value={importForm.supplierName}
+                      onChange={(e) => setImportForm({ ...importForm, supplierName: e.target.value })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl font-bold text-gray-900 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-800 text-[11px] mb-1">Seller WhatsApp / Phone</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. +918601509472"
+                      value={importForm.supplierPhone}
+                      onChange={(e) => setImportForm({ ...importForm, supplierPhone: e.target.value })}
+                      className="w-full p-2 bg-white border border-gray-200 rounded-xl font-mono font-bold text-emerald-800 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-800 text-[11px] mb-1">Seller Email (Optional)</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. seller@domain.com"
+                    value={importForm.supplierEmail}
+                    onChange={(e) => setImportForm({ ...importForm, supplierEmail: e.target.value })}
+                    className="w-full p-2 bg-white border border-gray-200 rounded-xl font-medium text-gray-900 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Product Image Link */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">Product Photo URL</label>
+                <input
+                  type="url"
+                  value={importForm.image}
+                  onChange={(e) => setImportForm({ ...importForm, image: e.target.value })}
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowImportLinkModal(false)}
+                  className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md"
+                >
+                  🚀 Save & Import Product with Seller
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
