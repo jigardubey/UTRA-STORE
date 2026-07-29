@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Bot, MessageSquare, Sparkles } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
 import { StoreProvider } from './context/StoreContext';
 import { CartProvider } from './context/CartContext';
@@ -14,6 +15,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { ProductQuickViewModal } from './components/ProductQuickViewModal';
 import { CheckoutModal } from './components/CheckoutModal';
 import { AuthModal } from './components/AuthModal';
+import { AICustomerSupportModal } from './components/AICustomerSupportModal';
 import { Product, ViewMode, Order } from './types';
 import { useAuth } from './context/AuthContext';
 
@@ -29,6 +31,7 @@ function AppContent() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isAiSupportModalOpen, setIsAiSupportModalOpen] = useState(false);
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -120,6 +123,32 @@ function AppContent() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
+
+      <AICustomerSupportModal
+        isOpen={isAiSupportModalOpen}
+        onClose={() => setIsAiSupportModalOpen(false)}
+      />
+
+      {/* Floating AI Customer Support Button */}
+      <button
+        onClick={() => setIsAiSupportModalOpen(true)}
+        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-600 hover:from-indigo-800 hover:to-purple-700 text-white px-4 py-3 rounded-full shadow-2xl flex items-center gap-2.5 transition-all hover:scale-105 group border border-indigo-400/40"
+        title="AI Customer Support & WhatsApp Help"
+      >
+        <div className="relative">
+          <Bot className="w-5 h-5 text-amber-300" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full" />
+        </div>
+        <div className="text-left hidden sm:block">
+          <span className="block text-[10px] text-indigo-200 font-extrabold uppercase tracking-wider leading-none">
+            24/7 Support
+          </span>
+          <span className="text-xs font-black text-white leading-tight">
+            AI Support & Owner Chat
+          </span>
+        </div>
+      </button>
 
       {/* Footer */}
       <Footer />

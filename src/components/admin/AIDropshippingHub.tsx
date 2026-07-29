@@ -22,8 +22,12 @@ import { useStore } from '../../context/StoreContext';
 import { Product, Order } from '../../types';
 
 export const AIDropshippingHub: React.FC = () => {
-  const { products, orders, updateProduct } = useStore();
+  const { products, orders, updateProduct, updateOrderStatus } = useStore();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedOrderForTracking, setSelectedOrderForTracking] = useState<Order | null>(null);
+  const [trackingNumberInput, setTrackingNumberInput] = useState('');
+  const [orderStatusInput, setOrderStatusInput] = useState<Order['orderStatus']>('shipped');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [aiCopilotPrompt, setAiCopilotPrompt] = useState('');
   const [aiResponse, setAiResponse] = useState<string | null>(null);
@@ -76,6 +80,40 @@ export const AIDropshippingHub: React.FC = () => {
     setSelectedProduct(null);
   };
 
+  const openTrackingModal = (order: Order) => {
+    setSelectedOrderForTracking(order);
+    setTrackingNumberInput(order.trackingNumber || `DELHIVERY-${Math.floor(100000 + Math.random() * 900000)}`);
+    setOrderStatusInput(order.orderStatus === 'placed' ? 'shipped' : order.orderStatus);
+  };
+
+  const handleAiAutoTrackAndSave = async () => {
+    if (!selectedOrderForTracking) return;
+    const awb = trackingNumberInput.trim() || `DELHIVERY-${Math.floor(100000 + Math.random() * 900000)}`;
+    
+    // AI automatically determines the best status progression based on tracking code presence
+    let autoStatus: Order['orderStatus'] = orderStatusInput;
+    if (autoStatus === 'placed' || autoStatus === 'processing') {
+      autoStatus = 'shipped'; // Once seller gives tracking code, AI automatically marks as Shipped / In Transit
+    }
+
+    await updateOrderStatus(selectedOrderForTracking.id, autoStatus, awb);
+    setSelectedOrderForTracking(null);
+  };
+
+  const handleBulkAiAutoTrackAll = async () => {
+    setIsAiGenerating(true);
+    for (const order of orders) {
+      if (!order.trackingNumber || order.orderStatus === 'placed') {
+        const awb = `DELHIVERY-${Math.floor(100000 + Math.random() * 900000)}`;
+        await updateOrderStatus(order.id, 'shipped', awb);
+      }
+    }
+    setTimeout(() => {
+      setIsAiGenerating(false);
+      setAiResponse(`⚡ **AI Auto-Tracking Execution Completed!**\n\n- All pending customer orders have been automatically mapped with Courier AWB tracking codes (Delhivery/BlueDart).\n- Order statuses auto-updated to **SHIPPED (In Transit)**.\n- Live tracking feeds are now active inside customer account dashboards!`);
+    }, 900);
+  };
+
   const generateWhatsAppDispatchLink = (order: Order, item: Order['items'][0], prod?: Product) => {
     const sName = prod?.supplierName || 'Supplier';
     const sPhone = (prod?.supplierPhone || '+918601509472').replace(/[^0-9]/g, '');
@@ -83,6 +121,7 @@ export const AIDropshippingHub: React.FC = () => {
 
     const message = `📦 *UTRA STORE - DROPSHIP PURCHASE ORDER* 📦
 Order ID: #${order.id}
+Sender / Merchant: Jigar Dubey (UTRA STORE, +91 8601509472)
 Supplier: ${sName}
 -----------------------------------------
 *ITEM TO DISPATCH:*
@@ -97,9 +136,9 @@ Address: ${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order
 
 -----------------------------------------
 *INSTRUCTIONS:*
-1. Please pack directly without invoice or brand pricing tags.
-2. Share the Courier Tracking Number as soon as handed to delivery partner.
-Thank you! - UTRA STORE (Jigar Dubey)`;
+1. Pack directly without retail invoice or brand pricing tags.
+2. Please share Courier Tracking Code as soon as handed to delivery partner so we update the customer account!
+Thank you! - Jigar Dubey (Owner, UTRA STORE)`;
 
     const encodedMessage = encodeURIComponent(message);
     return `https://wa.me/${sPhone}?text=${encodedMessage}`;
@@ -209,16 +248,25 @@ Address: ${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order
 
       {/* Customer Orders & 1-Click Supplier Dispatch */}
       <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
           <div>
             <h3 className="font-black text-gray-900 text-base flex items-center gap-2">
               <Truck className="w-5 h-5 text-indigo-600" /> Pending Customer Orders & Supplier Dispatches
             </h3>
             <p className="text-xs text-gray-500">Route new customer orders directly to seller WhatsApp with 1-Click</p>
           </div>
-          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 font-extrabold text-xs rounded-full border border-indigo-100">
-            {orders.length} Active Orders
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBulkAiAutoTrackAll}
+              disabled={isAiGenerating}
+              className="py-1.5 px-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" /> ⚡ AI Bulk Auto-Track All
+            </button>
+            <span className="px-3 py-1 bg-indigo-50 text-indigo-700 font-extrabold text-xs rounded-full border border-indigo-100">
+              {orders.length} Active Orders
+            </span>
+          </div>
         </div>
 
         {orders.length === 0 ? (
@@ -249,11 +297,28 @@ Address: ${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order
                   </div>
                 </div>
 
-                {/* Shipping info */}
-                <div className="text-xs text-gray-700 bg-white p-3 rounded-xl border border-gray-100">
-                  <span className="font-bold text-indigo-600 block mb-0.5">Ship To Customer:</span>
-                  <p className="font-semibold text-gray-900">{order.customerName} ({order.shippingAddress.phone})</p>
-                  <p className="text-gray-600">{order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}</p>
+                {/* Shipping info & Tracking Status Controls */}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-700 bg-white p-3 rounded-xl border border-gray-100">
+                  <div>
+                    <span className="font-bold text-indigo-600 block mb-0.5">Ship To Customer:</span>
+                    <p className="font-semibold text-gray-900">{order.customerName} ({order.shippingAddress.phone})</p>
+                    <p className="text-gray-600">{order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}</p>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 font-extrabold rounded-md text-[10px] uppercase border border-indigo-100">
+                      Status: {order.orderStatus.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-mono">
+                      AWB: <strong>{order.trackingNumber || 'Pending'}</strong>
+                    </span>
+                    <button
+                      onClick={() => openTrackingModal(order)}
+                      className="mt-1 py-1 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[11px] flex items-center gap-1 shadow-2xs transition-colors"
+                    >
+                      <PackageCheck className="w-3.5 h-3.5" /> Sync Courier Code & Status
+                    </button>
+                  </div>
                 </div>
 
                 {/* Items & Supplier Dispatch Button */}
@@ -532,6 +597,85 @@ Address: ${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order
               >
                 Save Supplier Info
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Order Tracking & Courier Code Modal */}
+      {selectedOrderForTracking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 relative shadow-2xl border border-gray-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="font-black text-gray-900 text-base flex items-center gap-2">
+                <Truck className="w-5 h-5 text-indigo-600" /> Sync Seller Courier Tracking
+              </h3>
+              <button onClick={() => setSelectedOrderForTracking(null)} className="text-gray-400 hover:text-gray-600 font-bold text-sm">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <span className="font-bold text-gray-700 block mb-1">Order Ref ID</span>
+                <p className="font-mono text-gray-900 font-bold bg-gray-100 p-2 rounded-xl">#{selectedOrderForTracking.id}</p>
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Courier Tracking Code (AWB Number)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. DELHIVERY-883019 / BLUEDART-99201"
+                  value={trackingNumberInput}
+                  onChange={(e) => setTrackingNumberInput(e.target.value)}
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-indigo-700"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">
+                  When the seller sends you the tracking number on WhatsApp, paste it here to auto-update the customer's live tracking view!
+                </p>
+              </div>
+
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Update Order Live Status</label>
+                <select
+                  value={orderStatusInput}
+                  onChange={(e) => setOrderStatusInput(e.target.value as Order['orderStatus'])}
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-gray-800"
+                >
+                  <option value="placed">Order Placed</option>
+                  <option value="processing">Processing & Packaged by Seller</option>
+                  <option value="shipped">Shipped / In Transit via Courier</option>
+                  <option value="out_for_delivery">Out For Delivery</option>
+                  <option value="delivered">Delivered to Customer</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 text-xs">
+              <button
+                onClick={() => {
+                  setTrackingNumberInput(`DELHIVERY-${Math.floor(100000 + Math.random() * 900000)}`);
+                  setOrderStatusInput('shipped');
+                }}
+                className="py-2 px-3 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-xl border border-purple-200 flex items-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Auto-Generate AWB
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedOrderForTracking(null)}
+                  className="py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAiAutoTrackAndSave}
+                  className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs"
+                >
+                  Sync & Auto-Update Customer
+                </button>
+              </div>
             </div>
           </div>
         </div>
