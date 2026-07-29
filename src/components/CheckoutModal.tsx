@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, MapPin, CreditCard, CheckCircle2, Truck, ShieldCheck, ArrowRight, Package } from 'lucide-react';
+import { X, MapPin, CreditCard, CheckCircle2, Truck, ShieldCheck, ArrowRight, Package, Bot } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -398,11 +398,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 max-w-md mx-auto text-left text-xs space-y-2">
                 <div className="flex justify-between border-b border-gray-200 pb-2">
                   <span className="text-gray-500">Order ID</span>
-                  <span className="font-bold text-indigo-600">{completedOrder.id}</span>
+                  <span className="font-bold text-indigo-600">#{completedOrder.id}</span>
                 </div>
                 <div className="flex justify-between border-b border-gray-200 pb-2">
                   <span className="text-gray-500">Tracking Number</span>
-                  <span className="font-mono font-bold text-gray-900">{completedOrder.trackingNumber}</span>
+                  <span className="font-mono font-bold text-gray-900">{completedOrder.trackingNumber || 'UTR-AUTO-ASSIGNED'}</span>
                 </div>
                 <div className="flex justify-between border-b border-gray-200 pb-2">
                   <span className="text-gray-500">Total Amount</span>
@@ -416,6 +416,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     {completedOrder.shippingAddress.street}, {completedOrder.shippingAddress.city}
                   </span>
                 </div>
+              </div>
+
+              {/* AI Auto-Dispatch Bot Live Notice */}
+              <div className="p-3 bg-gradient-to-r from-indigo-950 to-slate-900 text-white rounded-2xl max-w-md mx-auto text-left text-xs space-y-1.5 border border-indigo-500/30">
+                <div className="flex items-center gap-2 text-indigo-300 font-extrabold">
+                  <Bot className="w-4 h-4 text-amber-300" />
+                  <span>AI Dropshipping Bot Auto-Dispatch</span>
+                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] rounded-full border border-emerald-400/30">
+                    ACTIVE
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  The AI Bot has automatically formatted this order and transmitted the customer delivery address directly to the seller for dropship fulfillment!
+                </p>
               </div>
 
               <div className="pt-4 flex items-center justify-center gap-3">
