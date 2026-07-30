@@ -25,11 +25,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const { userProfile, currentUser } = useAuth();
   const { placeOrder, settings } = useStore();
 
+  const defaultName = userProfile?.displayName || currentUser?.displayName || (userProfile?.email ? userProfile.email.split('@')[0] : '') || 'Valued Customer';
+  const defaultPhone = userProfile?.phone || '9876543210';
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [address, setAddress] = useState<Address>({
     id: 'addr-1',
-    fullName: userProfile?.displayName || currentUser?.displayName || '',
-    phone: userProfile?.phone || '9876543210',
+    fullName: defaultName,
+    phone: defaultPhone,
     street: '42 MG Road, Sector 14',
     city: 'Bengaluru',
     state: 'Karnataka',
@@ -254,17 +257,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               <div className="pt-4 border-t border-gray-100 flex justify-end">
                 <button
+                  type="button"
                   onClick={() => {
+                    const finalName = address.fullName.trim() || defaultName;
+                    const finalStreet = address.street.trim() || '42 MG Road, Sector 14';
+                    setAddress((prev) => ({
+                      ...prev,
+                      fullName: finalName,
+                      street: finalStreet,
+                    }));
                     if (!currentUser && !userProfile) {
                       if (onOpenAuthModal) onOpenAuthModal();
                     } else {
                       setStep(2);
                     }
                   }}
-                  disabled={!address.fullName || !address.street}
-                  className="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2"
+                  className="py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
                 >
-                  <span>{!currentUser && !userProfile ? 'Sign In / Register to Pay' : 'Continue to Payment'}</span>
+                  <span>{!currentUser && !userProfile ? 'Sign In / Register to Pay' : 'Continue to Payment Options'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
