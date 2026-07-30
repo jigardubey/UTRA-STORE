@@ -32,7 +32,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     removeCoupon,
   } = useCart();
   const { settings } = useStore();
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
+  const isLoggedIn = !!(currentUser || userProfile);
 
   const [couponInput, setCouponInput] = useState('');
   const [couponFeedback, setCouponFeedback] = useState<{ success: boolean; message: string } | null>(null);
@@ -202,7 +203,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
               </div>
 
-              {!currentUser && (
+              {!isLoggedIn && (
                 <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 font-medium flex items-center gap-2">
                   <Lock className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>Order book karne ke liye Sign In / Login karna anivarya hai.</span>
@@ -212,7 +213,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               {/* Checkout Button */}
               <button
                 onClick={() => {
-                  if (!currentUser) {
+                  if (!isLoggedIn) {
                     onClose();
                     if (onOpenAuthModal) {
                       onOpenAuthModal();
@@ -225,12 +226,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   }
                 }}
                 className={`w-full py-3.5 px-4 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all ${
-                  !currentUser
+                  !isLoggedIn
                     ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-100'
                     : 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-200'
                 }`}
               >
-                {!currentUser ? (
+                {!isLoggedIn ? (
                   <>
                     <Lock className="w-4 h-4" />
                     <span>Sign In to Book Order</span>
