@@ -7,8 +7,9 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
+  deleteUser,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { UserProfile } from '../types';
 
@@ -38,6 +39,7 @@ interface AuthContextType {
   loginAsGuest: () => void;
   loginAsAdminWithPin: (pin: string) => boolean;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   toggleAdminOverride: () => void;
 }
 
@@ -75,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserProfile(newProfile);
       }
     } catch (err) {
-      console.warn('Error fetching user profile from Firestore:', err);
+      console.warn('Error fetching user profile from Firestore.');
       // Fallback local profile
       setUserProfile({
         uid: user.uid,
@@ -114,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await syncUserProfile(res.user);
       }
     } catch (err: any) {
-      console.warn('Firebase Google Auth Popup warning:', err?.code || err);
+      console.warn('Google Auth popup warning or blocked');
       // Fallback: Create normal customer profile for Google sign in if popup blocked
       const emailToUse = providedEmail?.trim().toLowerCase() || 'customer@gmail.com';
       const nameFromEmail = emailToUse.split('@')[0];
@@ -132,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await setDoc(doc(db, 'users', fallbackUid), profile);
       } catch (e) {
-        console.warn('Firestore fallback setDoc error:', e);
+        console.warn('Firestore fallback user creation skipped');
       }
       setUserProfile(profile);
       setAdminOverride(false);
@@ -147,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signInWithEmailAndPassword(auth, cleanEmail, pass);
     } catch (err: any) {
-      console.warn('Firebase Email Sign-In fallback engaged:', err?.code || err);
+      console.warn('Email Sign-In fallback engaged');
       // Fail-safe: Create customer profile (or admin profile ONLY IF pass matches secret owner PIN)
       const isPinMatch = ADMIN_PINS.includes(pass.trim());
       const fallbackUid = 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
@@ -163,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await setDoc(doc(db, 'users', fallbackUid), profile);
       } catch (e) {
-        console.warn('Firestore user save error:', e);
+        console.warn('Firestore user save warning');
       }
 
       setUserProfile(profile);
@@ -193,7 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserProfile(profile);
       setAdminOverride(false);
     } catch (err: any) {
-      console.warn('Firebase Signup fallback engaged:', err?.code || err);
+      console.warn('Signup fallback engaged');
       // Fail-safe customer registration
       const fallbackUid = 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
       const profile: UserProfile = {
@@ -208,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await setDoc(doc(db, 'users', fallbackUid), profile);
       } catch (e) {
-        console.warn('Firestore user save error:', e);
+        console.warn('Firestore user save warning');
       }
 
       setUserProfile(profile);
@@ -220,7 +222,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await sendPasswordResetEmail(auth, email);
     } catch (err) {
-      console.warn('Password reset fallback:', err);
+      console.warn('Password reset fallback triggered');
     }
   };
 
@@ -263,9 +265,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await signOut(auth);
       } catch (e) {
-        console.warn('Signout error:', e);
+        console.warn('Signout warning');
       }
     }
+  };
+
+  const deleteAccount = async () => {
+    if (userProfile?.uid) {
+      try {
+        await deleteDoc(doc(db, 'users', userProfile.uid));
+      } catch (e) {
+        console.warn('Account document removal warning');
+      }
+    }
+    if (auth.currentUser) {
+      try {
+        await deleteUser(auth.currentUser);
+      } catch (e) {
+        console.warn('Auth user deletion warning');
+      }
+    }
+    localStorage.removeItem('guest_order_ids');
+    localStorage.removeItem('utrastore_cart');
+    localStorage.removeItem('utrastore_wishlist');
+    setUserProfile(null);
+    setCurrentUser(null);
+    setIsGuest(false);
+    setAdminOverride(false);
   };
 
   const toggleAdminOverride = () => {
@@ -289,6 +315,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginAsGuest,
         loginAsAdminWithPin,
         logout,
+        deleteAccount,
         toggleAdminOverride,
       }}
     >

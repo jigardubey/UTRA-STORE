@@ -107,7 +107,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           await setDoc(doc(db, 'settings', 'global'), INITIAL_SETTINGS);
         }
       } catch (err) {
-        console.warn('Firestore seed/read check skipped or offline:', err);
+        console.warn('Firestore seed/read check skipped or offline');
       }
     };
 
@@ -253,8 +253,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const id = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
     const trackingNumber = 'TRK' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
+    // Sanitize order totals and quantities to prevent business logic exploitation
+    const sanitizedSubtotal = Math.max(0, orderData.subtotal);
+    const sanitizedDiscount = Math.max(0, Math.min(orderData.discount, sanitizedSubtotal));
+    const sanitizedShipping = Math.max(0, orderData.shippingFee);
+    const sanitizedTotal = Math.max(0, sanitizedSubtotal - sanitizedDiscount + sanitizedShipping);
+
+    const sanitizedItems = orderData.items.map((item) => ({
+      ...item,
+      quantity: Math.max(1, Math.floor(item.quantity)),
+      price: Math.max(0, item.price),
+    }));
+
     const newOrder: Order = {
       ...orderData,
+      subtotal: sanitizedSubtotal,
+      discount: sanitizedDiscount,
+      shippingFee: sanitizedShipping,
+      total: sanitizedTotal,
+      items: sanitizedItems,
       id,
       trackingNumber,
       createdAt: new Date().toISOString(),
@@ -350,7 +367,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       await setDoc(doc(db, 'settings', 'global'), updated);
     } catch (err) {
-      console.warn('Failed to update Firestore settings:', err);
+      console.warn('Failed to update Firestore settings');
     }
   };
 

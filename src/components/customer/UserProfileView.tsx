@@ -8,7 +8,7 @@ interface UserProfileViewProps {
 }
 
 export const UserProfileView: React.FC<UserProfileViewProps> = ({ onBack }) => {
-  const { userProfile, isAdmin } = useAuth();
+  const { userProfile, isAdmin, deleteAccount } = useAuth();
   const [savedAddresses, setSavedAddresses] = useState<Address[]>(userProfile?.addresses || [
     {
       id: 'addr-1',
@@ -142,6 +142,31 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({ onBack }) => {
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Account & Data Privacy Deletion Section */}
+      <div className="p-5 bg-red-50/60 border border-red-100 rounded-3xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-bold text-red-900 text-xs flex items-center gap-1.5">
+              <Shield className="w-4 h-4 text-red-600" /> Account Privacy & Data Deletion
+            </h4>
+            <p className="text-[11px] text-red-700 mt-0.5">
+              Permanently remove your account profile, delivery addresses, and personal store activity data from UTRA STORE servers.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to permanently delete your account and personal data? This action cannot be undone.')) {
+                deleteAccount();
+                onBack();
+              }
+            }}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors shrink-0"
+          >
+            Delete My Account
+          </button>
         </div>
       </div>
     </div>

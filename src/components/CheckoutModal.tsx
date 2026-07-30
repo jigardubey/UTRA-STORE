@@ -82,7 +82,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const existingGuestOrders = JSON.parse(localStorage.getItem('guest_order_ids') || '[]');
       localStorage.setItem('guest_order_ids', JSON.stringify([...existingGuestOrders, newOrder.id]));
     } catch (e) {
-      console.warn('LocalStorage save error:', e);
+      console.warn('LocalStorage order storage skipped');
     }
 
     clearCart();

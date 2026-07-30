@@ -49,7 +49,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.setItem('utrastore_cart', JSON.stringify(cart));
     } catch (e) {
-      console.warn('LocalStorage save cart error:', e);
+      console.warn('LocalStorage cart save skipped');
     }
   }, [cart]);
 
@@ -57,7 +57,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.setItem('utrastore_wishlist', JSON.stringify(wishlist));
     } catch (e) {
-      console.warn('LocalStorage save wishlist error:', e);
+      console.warn('LocalStorage wishlist save skipped');
     }
   }, [wishlist]);
 

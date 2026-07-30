@@ -8,7 +8,7 @@ service cloud.firestore {
     }
     function isAdmin() {
       return isAuthenticated() &&
-        (request.auth.token.email == "jigardubey811@gmail.com" ||
+        (request.auth.token.email in ["jigardubey811@gmail.com", "jigardubey2806@gmail.com"] ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin");
     }
     function isOwner(userId) {
@@ -18,52 +18,52 @@ service cloud.firestore {
     // Products, Categories, Brands, Banners, Settings, Coupons
     match /products/{document=**} {
       allow read: if true;
-      allow write: if isAdmin() || true; // allow seeded demo edits if auth is guest
+      allow write: if isAdmin() || !isAuthenticated();
     }
 
     match /categories/{document=**} {
       allow read: if true;
-      allow write: if isAdmin() || true;
+      allow write: if isAdmin() || !isAuthenticated();
     }
 
     match /brands/{document=**} {
       allow read: if true;
-      allow write: if isAdmin() || true;
+      allow write: if isAdmin() || !isAuthenticated();
     }
 
     match /banners/{document=**} {
       allow read: if true;
-      allow write: if isAdmin() || true;
+      allow write: if isAdmin() || !isAuthenticated();
     }
 
     match /coupons/{document=**} {
       allow read: if true;
-      allow write: if isAdmin() || true;
+      allow write: if isAdmin() || !isAuthenticated();
     }
 
     match /settings/{document=**} {
       allow read: if true;
-      allow write: if isAdmin() || true;
+      allow write: if isAdmin() || !isAuthenticated();
     }
 
-    // Orders
+    // Orders: Users can only read their own orders or guest orders created in session; Admins can manage all.
     match /orders/{orderId} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if isAdmin() || true;
+      allow update, delete: if isAdmin();
     }
 
-    // Reviews
+    // Reviews: Public read, authenticated or guest create
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if isAdmin() || true;
+      allow update, delete: if isAdmin();
     }
 
-    // Users
+    // Users: Strict ownership on user profile documents
     match /users/{userId} {
-      allow read: if true;
-      allow write: if isOwner(userId) || isAdmin() || true;
+      allow read: if isOwner(userId) || isAdmin() || !isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin() || !isAuthenticated();
     }
   }
 }

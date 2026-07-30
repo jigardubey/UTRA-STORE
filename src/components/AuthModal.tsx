@@ -26,6 +26,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [authAttempts, setAuthAttempts] = useState<number[]>([]);
 
   // Admin PIN prompt state
   const [showAdminPinModal, setShowAdminPinModal] = useState(false);
@@ -36,6 +37,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     setError('');
     setMessage('');
+
+    // Rate limiting: max 5 attempts per minute
+    const now = Date.now();
+    const recentAttempts = authAttempts.filter((t) => now - t < 60000);
+    if (recentAttempts.length >= 5) {
+      setError('Too many authentication attempts. Please wait 1 minute before trying again.');
+      return;
+    }
+    setAuthAttempts([...recentAttempts, now]);
     setLoading(true);
 
     try {
@@ -50,7 +60,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setMessage('Password reset link processed successfully.');
       }
     } catch (err: any) {
-      onClose();
+      setError('Authentication request could not be completed. Please check your details or try again.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +72,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       await loginWithGoogle(email || undefined);
       onClose();
     } catch (err: any) {
-      console.warn('Google login error:', err);
+      console.warn('Google login popup or authentication warning');
       if (email) {
         await loginWithGoogle(email);
         onClose();
