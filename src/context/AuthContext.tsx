@@ -157,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await syncUserProfile(res.user);
       }
     } catch (err: any) {
-      console.warn('Google Auth popup warning or blocked');
+      console.warn('Google Auth popup warning or blocked:', err?.code || err);
       if (providedEmail && providedEmail.trim()) {
         const emailToUse = providedEmail.trim().toLowerCase();
         const isUserAdmin = ADMIN_EMAILS.includes(emailToUse);
@@ -182,73 +182,149 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isUserAdmin) setAdminOverride(true);
         else setAdminOverride(false);
       } else {
-        throw new Error('Google popup blocked. Please type your Google Email in the email box above and click Continue with Google.');
+        throw new Error('Google Popup iframe me blocked hai. Kripya apni Email ID upar text box me likhein aur Continue with Google click karein!');
       }
+    }
+  };
+
+  const getSavedAccounts = (): Record<string, { password: string; name: string; role: 'admin' | 'customer' }> => {
+    try {
+      const saved = localStorage.getItem('utrastore_registered_accounts');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const saveAccountToLocal = (email: string, pass: string, name: string, role: 'admin' | 'customer') => {
+    try {
+      const accounts = getSavedAccounts();
+      accounts[email] = { password: pass, name, role };
+      localStorage.setItem('utrastore_registered_accounts', JSON.stringify(accounts));
+    } catch {
+      // ignore
     }
   };
 
   const loginWithEmail = async (email: string, pass: string) => {
     setIsGuest(false);
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = pass.trim();
     const isUserAdmin = ADMIN_EMAILS.includes(cleanEmail);
 
-    try {
-      await signInWithEmailAndPassword(auth, cleanEmail, pass);
-    } catch (err: any) {
-      console.warn('Email Sign-In fallback engaged');
-      // Fail-safe: Create customer profile (or admin profile ONLY IF pass matches secret owner PIN)
-      const isPinMatch = ADMIN_PINS.includes(pass.trim());
-      const fallbackUid = 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
-      const profile: UserProfile = {
-        uid: fallbackUid,
-        email: cleanEmail,
-        displayName: cleanEmail.split('@')[0],
-        role: (isUserAdmin && isPinMatch) ? 'admin' : 'customer',
-        addresses: [],
-        createdAt: new Date().toISOString(),
-      };
+    if (!cleanEmail || !cleanPass) {
+      throw new Error('Email aur Password dono bharo!');
+    }
 
-      try {
-        await setDoc(doc(db, 'users', fallbackUid), profile);
-      } catch (e) {
-        console.warn('Firestore user save warning');
+    try {
+      await signInWithEmailAndPassword(auth, cleanEmail, cleanPass);
+    } catch (err: any) {
+      const errCode = err?.code || '';
+      console.warn('Firebase Auth signin warning:', errCode);
+
+      // If Firebase Auth specifically tells us wrong password or invalid credentials
+      if (errCode === 'auth/wrong-password' || errCode === 'auth/invalid-credential') {
+        throw new Error('Galaat Password! Kripya sahi password enter karein.');
+      }
+      if (errCode === 'auth/user-not-found') {
+        throw new Error('Is email se koi account nahi mila. Kripya pehle Create Account par click karke Sign Up karein!');
       }
 
-      setUserProfile(profile);
-      if (isUserAdmin && isPinMatch) setAdminOverride(true);
-      else setAdminOverride(false);
+      // Check registered local accounts or Firestore offline accounts
+      const localAccounts = getSavedAccounts();
+      const existingAccount = localAccounts[cleanEmail];
+
+      if (existingAccount) {
+        if (existingAccount.password !== cleanPass) {
+          throw new Error('Galaat Password! Kripya sahi password enter karein.');
+        }
+        const fallbackUid = 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
+        const profile: UserProfile = {
+          uid: fallbackUid,
+          email: cleanEmail,
+          displayName: existingAccount.name || cleanEmail.split('@')[0],
+          role: existingAccount.role,
+          addresses: [],
+          createdAt: new Date().toISOString(),
+        };
+        setUserProfile(profile);
+        if (existingAccount.role === 'admin') setAdminOverride(true);
+        else setAdminOverride(false);
+        return;
+      }
+
+      // Allow Admin PIN match login
+      const isPinMatch = ADMIN_PINS.includes(cleanPass);
+      if (isUserAdmin && isPinMatch) {
+        const fallbackUid = 'admin-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
+        const profile: UserProfile = {
+          uid: fallbackUid,
+          email: cleanEmail,
+          displayName: 'Admin ' + cleanEmail.split('@')[0],
+          role: 'admin',
+          addresses: [],
+          createdAt: new Date().toISOString(),
+        };
+        setUserProfile(profile);
+        setAdminOverride(true);
+        return;
+      }
+
+      // If account does not exist and password does not match
+      throw new Error('Account nahi mila ya Galaat Password! Kripya pehle Create Account par click karke Sign Up karein.');
     }
   };
 
   const signupWithEmail = async (email: string, pass: string, name: string) => {
     setIsGuest(false);
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = pass.trim();
+
+    if (!cleanEmail || !cleanPass) {
+      throw new Error('Email aur Password dono required hain!');
+    }
+    if (cleanPass.length < 6) {
+      throw new Error('Password kam se kam 6 characters ka hona chahiye!');
+    }
+
+    const isUserAdmin = ADMIN_EMAILS.includes(cleanEmail);
+    const role: 'admin' | 'customer' = isUserAdmin ? 'admin' : 'customer';
 
     try {
-      const res = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
+      const res = await createUserWithEmailAndPassword(auth, cleanEmail, cleanPass);
       const userDocRef = doc(db, 'users', res.user.uid);
 
       const profile: UserProfile = {
         uid: res.user.uid,
         email: cleanEmail,
-        displayName: name,
-        role: 'customer',
+        displayName: name || cleanEmail.split('@')[0],
+        role,
         addresses: [],
         createdAt: new Date().toISOString(),
       };
 
       await setDoc(userDocRef, profile);
+      saveAccountToLocal(cleanEmail, cleanPass, name || cleanEmail.split('@')[0], role);
       setUserProfile(profile);
-      setAdminOverride(false);
+      if (role === 'admin') setAdminOverride(true);
+      else setAdminOverride(false);
     } catch (err: any) {
-      console.warn('Signup fallback engaged');
-      // Fail-safe customer registration
+      const errCode = err?.code || '';
+      if (errCode === 'auth/email-already-in-use') {
+        throw new Error('Ye Email pehle se registered hai! Sign In wale tab par jake login karein.');
+      }
+      if (errCode === 'auth/weak-password') {
+        throw new Error('Password weak hai! Kripya thoda strong password dalein.');
+      }
+
+      // Fallback local registration
+      saveAccountToLocal(cleanEmail, cleanPass, name || cleanEmail.split('@')[0], role);
       const fallbackUid = 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '-');
       const profile: UserProfile = {
         uid: fallbackUid,
         email: cleanEmail,
         displayName: name || cleanEmail.split('@')[0],
-        role: 'customer',
+        role,
         addresses: [],
         createdAt: new Date().toISOString(),
       };
@@ -260,7 +336,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUserProfile(profile);
-      setAdminOverride(false);
+      if (role === 'admin') setAdminOverride(true);
+      else setAdminOverride(false);
     }
   };
 
