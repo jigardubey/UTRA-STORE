@@ -1,11 +1,29 @@
 import React, { useState } from 'react';
-import { Shield, Truck, RefreshCw, Lock, Phone, Mail, MapPin, MessageSquare, FileText } from 'lucide-react';
+import { Shield, Truck, RefreshCw, Lock, Phone, Mail, MapPin, MessageSquare, FileText, KeyRound, X, ShieldCheck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useAuth } from '../context/AuthContext';
 import { PolicyModal } from './PolicyModal';
 
 export const Footer: React.FC = () => {
   const { settings } = useStore();
+  const { loginAsAdminWithPin } = useAuth();
   const [policyTab, setPolicyTab] = useState<'privacy' | 'terms' | 'refund' | 'security' | null>(null);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPin, setAdminPin] = useState('');
+  const [pinError, setPinError] = useState('');
+
+  const handleAdminSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError('');
+    const success = loginAsAdminWithPin(adminPin);
+    if (success) {
+      setShowAdminModal(false);
+      setAdminPin('');
+      alert('Welcome, Store Administrator! Admin Panel is now unlocked in the menu.');
+    } else {
+      setPinError('Incorrect Secret Admin PIN. Access Denied.');
+    }
+  };
 
   return (
     <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
@@ -139,7 +157,17 @@ export const Footer: React.FC = () => {
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-slate-800 text-center text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div>© {new Date().getFullYear()} <strong className="text-slate-300 font-bold">UTRA STORE</strong>. All rights reserved.</div>
-        <div>Owner: <span className="text-slate-300 font-bold">Jigar Dubey</span> (+91 8601509472)</div>
+        <div className="flex items-center gap-3">
+          <span>Owner: <span className="text-slate-300 font-bold">Jigar Dubey</span> (+91 8601509472)</span>
+          <button
+            type="button"
+            onClick={() => setShowAdminModal(true)}
+            className="text-[10px] text-slate-600 hover:text-slate-400 font-mono transition-colors"
+            title="Store Owner Portal"
+          >
+            • Owner Portal
+          </button>
+        </div>
       </div>
 
       <PolicyModal
@@ -147,6 +175,59 @@ export const Footer: React.FC = () => {
         onClose={() => setPolicyTab(null)}
         initialTab={policyTab || 'privacy'}
       />
+
+      {/* Discrete Admin PIN Modal */}
+      {showAdminModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white text-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative animate-in fade-in zoom-in-95">
+            <button
+              onClick={() => {
+                setShowAdminModal(false);
+                setAdminPin('');
+              }}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-5">
+              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">Store Owner Admin Access</h3>
+              <p className="text-xs text-slate-500 mt-1">Enter your secret Owner PIN to unlock Admin Dashboard</p>
+            </div>
+
+            <form onSubmit={handleAdminSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Secret Owner PIN</label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <input
+                    type="password"
+                    value={adminPin}
+                    onChange={(e) => setAdminPin(e.target.value)}
+                    placeholder="Enter 4-digit secret PIN"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {pinError && (
+                <p className="text-xs text-red-600 font-semibold text-center bg-red-50 p-2 rounded-xl">{pinError}</p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+              >
+                <ShieldCheck className="w-4 h-4 text-amber-400" /> Verify & Access Admin Dashboard
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };

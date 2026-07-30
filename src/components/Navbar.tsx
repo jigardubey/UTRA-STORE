@@ -183,14 +183,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               {userProfile ? (
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 text-gray-700 hover:bg-gray-100 rounded-full transition-colors border border-gray-200"
+                  className="flex items-center gap-2 px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-full transition-colors border border-indigo-200/80 bg-indigo-50/50"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white text-xs font-bold flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white text-xs font-bold flex items-center justify-center shadow-xs">
                     {userProfile.displayName.charAt(0).toUpperCase()}
                   </div>
-                  <span className="hidden xl:inline text-xs font-medium max-w-[100px] truncate">
-                    {userProfile.displayName}
-                  </span>
+                  <div className="hidden sm:flex flex-col text-left pr-1">
+                    <span className="text-[10px] text-indigo-600 font-extrabold uppercase tracking-tight leading-none">Welcome 👋</span>
+                    <span className="text-xs font-bold text-gray-900 max-w-[110px] truncate leading-tight">
+                      {userProfile.displayName}
+                    </span>
+                  </div>
                 </button>
               ) : (
                 <button
@@ -205,15 +208,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Profile Dropdown Menu */}
               {userDropdownOpen && userProfile && (
                 <div
-                  className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 divide-y divide-gray-100 text-xs"
+                  className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 divide-y divide-gray-100 text-xs"
                   onMouseLeave={() => setUserDropdownOpen(false)}
                 >
-                  <div className="px-4 py-2.5">
-                    <p className="font-bold text-gray-900 truncate">{userProfile.displayName}</p>
-                    <p className="text-gray-500 text-[11px] truncate">{userProfile.email}</p>
+                  <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50/50 rounded-t-xl">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black flex items-center justify-center text-sm shadow-xs">
+                        {userProfile.displayName.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="text-[11px] text-indigo-600 font-bold uppercase tracking-wider">Aapka Swagat Hai! 👋</p>
+                        <p className="font-extrabold text-gray-900 truncate text-sm">{userProfile.displayName}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-500 text-[11px] truncate mt-1 pl-0.5">{userProfile.email}</p>
                     {isAdmin && (
-                      <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-amber-50 text-amber-700 font-semibold text-[10px] rounded-md border border-amber-200">
-                        <ShieldCheck className="w-3 h-3" /> Store Admin
+                      <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 bg-amber-50 text-amber-700 font-semibold text-[10px] rounded-md border border-amber-200">
+                        <ShieldCheck className="w-3 h-3" /> Certified Store Admin
                       </span>
                     )}
                   </div>

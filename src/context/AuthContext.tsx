@@ -21,7 +21,7 @@ const ADMIN_EMAILS = (
   .map((e: string) => e.trim().toLowerCase());
 
 const ADMIN_PINS = (
-  import.meta.env.VITE_ADMIN_PINS || '8601,2806,1234,8601509472'
+  import.meta.env.VITE_ADMIN_PINS || '2806,1451'
 )
   .split(',')
   .map((p: string) => p.trim());
@@ -155,36 +155,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await signInWithPopup(auth, googleProvider);
       if (res.user) {
         await syncUserProfile(res.user);
+        return;
       }
     } catch (err: any) {
-      console.warn('Google Auth popup warning or blocked:', err?.code || err);
-      if (providedEmail && providedEmail.trim()) {
-        const emailToUse = providedEmail.trim().toLowerCase();
-        const isUserAdmin = ADMIN_EMAILS.includes(emailToUse);
-        const nameFromEmail = emailToUse.split('@')[0];
-        const capitalizedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
-        const fallbackUid = 'google-user-' + emailToUse.replace(/[^a-z0-9]/g, '-');
-        const profile: UserProfile = {
-          uid: fallbackUid,
-          email: emailToUse,
-          displayName: `${capitalizedName}`,
-          role: isUserAdmin ? 'admin' : 'customer',
-          addresses: [],
-          createdAt: new Date().toISOString(),
-        };
-        
-        try {
-          await setDoc(doc(db, 'users', fallbackUid), profile);
-        } catch (e) {
-          console.warn('Firestore fallback user creation skipped');
-        }
-        setUserProfile(profile);
-        if (isUserAdmin) setAdminOverride(true);
-        else setAdminOverride(false);
-      } else {
-        throw new Error('Google Popup iframe me blocked hai. Kripya apni Email ID upar text box me likhein aur Continue with Google click karein!');
-      }
+      console.warn('Google Auth popup notice:', err?.code || err);
     }
+
+    // Fallback for iframe preview or blocked popups:
+    // Ensure every user gets their own individual account and NEVER impersonates the store owner.
+    let emailToUse = providedEmail?.trim().toLowerCase();
+    
+    if (!emailToUse) {
+      const randomTag = Math.random().toString(36).substring(2, 7);
+      emailToUse = `customer_${randomTag}@utrastore.com`;
+    }
+
+    const nameFromEmail = emailToUse.split('@')[0];
+    const capitalizedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+    const fallbackUid = 'user-' + emailToUse.replace(/[^a-z0-9]/g, '-');
+    
+    // Safety check: Unauthenticated fallback Google login is ALWAYS customer role.
+    // Admin role requires explicit Admin PIN authentication.
+    const profile: UserProfile = {
+      uid: fallbackUid,
+      email: emailToUse,
+      displayName: capitalizedName,
+      photoURL: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+      role: 'customer',
+      addresses: [],
+      createdAt: new Date().toISOString(),
+    };
+    
+    try {
+      await setDoc(doc(db, 'users', fallbackUid), profile);
+    } catch (e) {
+      console.warn('Firestore fallback user creation skipped');
+    }
+    setUserProfile(profile);
+    setAdminOverride(false);
   };
 
   const getSavedAccounts = (): Record<string, { password: string; name: string; role: 'admin' | 'customer' }> => {
