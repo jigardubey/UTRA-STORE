@@ -21,10 +21,24 @@ import { useAuth } from './context/AuthContext';
 
 function AppContent() {
   const { currentUser } = useAuth();
-  const [currentView, setView] = useState<ViewMode>('store');
+  const [currentView, setCurrentView] = useState<ViewMode>(() => {
+    try {
+      const saved = localStorage.getItem('utrastore_current_view');
+      return (saved as ViewMode) || 'store';
+    } catch {
+      return 'store';
+    }
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(() => {
+    try {
+      const saved = localStorage.getItem('utrastore_selected_product');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   // Modals / Drawers State
@@ -33,8 +47,22 @@ function AppContent() {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isAiSupportModalOpen, setIsAiSupportModalOpen] = useState(false);
 
+  const setView = (view: ViewMode) => {
+    setCurrentView(view);
+    try {
+      localStorage.setItem('utrastore_current_view', view);
+    } catch {
+      // ignore
+    }
+  };
+
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
+    try {
+      localStorage.setItem('utrastore_selected_product', JSON.stringify(product));
+    } catch {
+      // ignore
+    }
     setView('product_detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -55,7 +83,7 @@ function AppContent() {
 
       {/* Main Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {currentView === 'store' && (
+        {(currentView === 'store' || (currentView === 'product_detail' && !selectedProduct)) && (
           <StorefrontView
             searchQuery={searchQuery}
             selectedCategory={selectedCategory}

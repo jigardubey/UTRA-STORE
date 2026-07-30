@@ -47,10 +47,50 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isGuest, setIsGuest] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('utrastore_user_profile');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    return localStorage.getItem('utrastore_is_guest') === 'true';
+  });
   const [loading, setLoading] = useState(true);
-  const [adminOverride, setAdminOverride] = useState(false);
+  const [adminOverride, setAdminOverride] = useState<boolean>(() => {
+    return localStorage.getItem('utrastore_admin_override') === 'true';
+  });
+
+  // Save profile to localStorage whenever it changes
+  useEffect(() => {
+    if (userProfile) {
+      try {
+        localStorage.setItem('utrastore_user_profile', JSON.stringify(userProfile));
+      } catch (e) {
+        // ignore
+      }
+    } else {
+      localStorage.removeItem('utrastore_user_profile');
+    }
+  }, [userProfile]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('utrastore_is_guest', isGuest ? 'true' : 'false');
+    } catch (e) {
+      // ignore
+    }
+  }, [isGuest]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('utrastore_admin_override', adminOverride ? 'true' : 'false');
+    } catch (e) {
+      // ignore
+    }
+  }, [adminOverride]);
 
   // Sync user profile from Firestore or create default
   const syncUserProfile = async (user: User) => {
@@ -98,7 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await syncUserProfile(user);
       } else {
         setCurrentUser(null);
-        if (!isGuest && !userProfile) {
+        // Do not erase userProfile if guest/local fallback profile is active
+        if (!isGuest && !localStorage.getItem('utrastore_user_profile')) {
           setUserProfile(null);
         }
       }
@@ -117,27 +158,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: any) {
       console.warn('Google Auth popup warning or blocked');
-      // Fallback: Create normal customer profile for Google sign in if popup blocked
-      const emailToUse = providedEmail?.trim().toLowerCase() || 'customer@gmail.com';
-      const nameFromEmail = emailToUse.split('@')[0];
-      const capitalizedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
-      const fallbackUid = 'google-user-' + emailToUse.replace(/[^a-z0-9]/g, '-');
-      const profile: UserProfile = {
-        uid: fallbackUid,
-        email: emailToUse,
-        displayName: `${capitalizedName} (Google User)`,
-        role: 'customer',
-        addresses: [],
-        createdAt: new Date().toISOString(),
-      };
-      
-      try {
-        await setDoc(doc(db, 'users', fallbackUid), profile);
-      } catch (e) {
-        console.warn('Firestore fallback user creation skipped');
+      if (providedEmail && providedEmail.trim()) {
+        const emailToUse = providedEmail.trim().toLowerCase();
+        const isUserAdmin = ADMIN_EMAILS.includes(emailToUse);
+        const nameFromEmail = emailToUse.split('@')[0];
+        const capitalizedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+        const fallbackUid = 'google-user-' + emailToUse.replace(/[^a-z0-9]/g, '-');
+        const profile: UserProfile = {
+          uid: fallbackUid,
+          email: emailToUse,
+          displayName: `${capitalizedName}`,
+          role: isUserAdmin ? 'admin' : 'customer',
+          addresses: [],
+          createdAt: new Date().toISOString(),
+        };
+        
+        try {
+          await setDoc(doc(db, 'users', fallbackUid), profile);
+        } catch (e) {
+          console.warn('Firestore fallback user creation skipped');
+        }
+        setUserProfile(profile);
+        if (isUserAdmin) setAdminOverride(true);
+        else setAdminOverride(false);
+      } else {
+        throw new Error('Google popup blocked. Please type your Google Email in the email box above and click Continue with Google.');
       }
-      setUserProfile(profile);
-      setAdminOverride(false);
     }
   };
 
@@ -261,6 +307,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsGuest(false);
     setUserProfile(null);
     setAdminOverride(false);
+    try {
+      localStorage.removeItem('utrastore_user_profile');
+      localStorage.removeItem('utrastore_is_guest');
+      localStorage.removeItem('utrastore_admin_override');
+    } catch (e) {
+      // ignore
+    }
     if (auth.currentUser) {
       try {
         await signOut(auth);

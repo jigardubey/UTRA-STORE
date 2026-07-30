@@ -69,15 +69,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const handleGoogle = async () => {
     setError('');
     try {
-      await loginWithGoogle(email || undefined);
+      if (email.trim()) {
+        await loginWithGoogle(email.trim());
+        onClose();
+        return;
+      }
+      await loginWithGoogle(undefined);
       onClose();
     } catch (err: any) {
-      console.warn('Google login popup or authentication warning');
-      if (email) {
-        await loginWithGoogle(email);
-        onClose();
+      if (email.trim()) {
+        try {
+          await loginWithGoogle(email.trim());
+          onClose();
+        } catch (e: any) {
+          setError(e.message || 'Google Login process failed.');
+        }
       } else {
-        setError('Google login popup was blocked or domain not whitelisted. Please enter your email address in the box above and click Continue with Google.');
+        setError('Google popup iframe me blocked/constrained hai. Apni Email address box me type karein aur Continue with Google pe click karein!');
       }
     }
   };
