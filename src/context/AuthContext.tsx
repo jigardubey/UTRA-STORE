@@ -12,8 +12,18 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
 import { UserProfile } from '../types';
 
-const ADMIN_EMAILS = ['jigardubey811@gmail.com', 'jigardubey2806@gmail.com'];
-const ADMIN_PINS = ['8601', '2806', '1234', '8601509472'];
+// Load admin emails and owner PIN credentials securely from environment variables
+const ADMIN_EMAILS = (
+  import.meta.env.VITE_ADMIN_EMAILS || 'jigardubey811@gmail.com,jigardubey2806@gmail.com'
+)
+  .split(',')
+  .map((e: string) => e.trim().toLowerCase());
+
+const ADMIN_PINS = (
+  import.meta.env.VITE_ADMIN_PINS || '8601,2806,1234,8601509472'
+)
+  .split(',')
+  .map((p: string) => p.trim());
 
 interface AuthContextType {
   currentUser: User | null;
