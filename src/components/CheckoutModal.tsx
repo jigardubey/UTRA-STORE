@@ -47,11 +47,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleCreateOrder = async (
     paymentDetails?: { method: 'razorpay' | 'upi' | 'qr'; transactionId: string }
   ) => {
-    if (!currentUser && !userProfile) {
-      if (onOpenAuthModal) onOpenAuthModal();
-      return;
-    }
-
     setIsSubmitting(true);
     const orderItems = cart.map((item) => ({
       productId: item.product.id,
@@ -61,8 +56,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       image: item.product.images[0],
     }));
 
-    const activeUid = userProfile?.uid || currentUser?.uid || 'user-' + Date.now();
-    const activeEmail = userProfile?.email || currentUser?.email || 'customer@utrastore.com';
+    const activeUid = userProfile?.uid || currentUser?.uid || 'guest-' + Date.now();
+    const activeEmail = userProfile?.email || currentUser?.email || (address.phone ? `${address.phone}@customer.utrastore.com` : 'customer@utrastore.com');
     const activeName = address.fullName || userProfile?.displayName || currentUser?.displayName || 'Valued Customer';
 
     const newOrder = await placeOrder({
@@ -96,11 +91,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const handleProceedPayment = () => {
-    if (!currentUser && !userProfile) {
-      if (onOpenAuthModal) onOpenAuthModal();
-      return;
-    }
-
     if (paymentMethod === 'razorpay' || paymentMethod === 'upi' || paymentMethod === 'qr') {
       setRazorpayModalOpen(true);
     } else {
@@ -172,20 +162,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {step === 1 && (
             <div className="space-y-4">
               {!currentUser && !userProfile && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs animate-fade-in">
-                  <div className="flex items-center gap-2 text-amber-900 font-semibold">
-                    <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
-                    <div>
-                      <strong className="block text-amber-900 font-bold">Login Required to Place Order</strong>
-                      <span className="text-[11px] text-amber-800">Order book karne ke liye kripya pehle Sign In / Register karein.</span>
-                    </div>
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs animate-fade-in">
+                  <div className="flex items-center gap-2 text-indigo-900 font-semibold">
+                    <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span>Instant Express Checkout — Fill your delivery details below!</span>
                   </div>
                   <button
                     type="button"
                     onClick={onOpenAuthModal}
-                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-xs"
+                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[11px] shadow-xs"
                   >
-                    Sign In / Register
+                    Sign In (Optional)
                   </button>
                 </div>
               )}
@@ -266,15 +253,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       fullName: finalName,
                       street: finalStreet,
                     }));
-                    if (!currentUser && !userProfile) {
-                      if (onOpenAuthModal) onOpenAuthModal();
-                    } else {
-                      setStep(2);
-                    }
+                    setStep(2);
                   }}
                   className="py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer"
                 >
-                  <span>{!currentUser && !userProfile ? 'Sign In / Register to Pay' : 'Continue to Payment Options'}</span>
+                  <span>Continue to Payment Options</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>

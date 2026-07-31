@@ -159,11 +159,7 @@ function AppContent() {
         isOpen={isCartDrawerOpen}
         onClose={() => setIsCartDrawerOpen(false)}
         onProceedToCheckout={() => {
-          if (!currentUser && !userProfile) {
-            setIsAuthModalOpen(true);
-          } else {
-            setIsCheckoutModalOpen(true);
-          }
+          setIsCheckoutModalOpen(true);
         }}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />

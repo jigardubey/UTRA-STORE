@@ -203,45 +203,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
               </div>
 
-              {!isLoggedIn && (
-                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 font-medium flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Order book karne ke liye Sign In / Login karna anivarya hai.</span>
-                </div>
-              )}
-
               {/* Checkout Button */}
               <button
+                type="button"
                 onClick={() => {
-                  if (!isLoggedIn) {
-                    onClose();
-                    if (onOpenAuthModal) {
-                      onOpenAuthModal();
-                    } else {
-                      onProceedToCheckout();
-                    }
-                  } else {
-                    onClose();
-                    onProceedToCheckout();
-                  }
+                  onClose();
+                  onProceedToCheckout();
                 }}
-                className={`w-full py-3.5 px-4 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all ${
-                  !isLoggedIn
-                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-100'
-                    : 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 shadow-indigo-200'
-                }`}
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 transition-all cursor-pointer"
               >
-                {!isLoggedIn ? (
-                  <>
-                    <Lock className="w-4 h-4" />
-                    <span>Sign In to Book Order</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Proceed to Checkout</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
+                <span>Proceed to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
 
               <div className="flex items-center justify-center gap-2 text-[10px] text-gray-400 font-medium">
