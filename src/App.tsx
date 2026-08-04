@@ -97,24 +97,20 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0F] text-slate-100 flex flex-col font-sans antialiased selection:bg-purple-500/30 selection:text-purple-300 relative bg-radial-ambient">
-      {/* Ambient background glows */}
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse-glow" />
-      <div className="fixed bottom-1/3 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse-glow" style={{ animationDelay: '2s' }} />
-
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans antialiased selection:bg-blue-500/20 selection:text-blue-600 relative">
       {/* Welcome Toast Alert */}
       {welcomeBanner && (
-        <div className="fixed top-20 right-4 sm:right-6 z-50 max-w-md bg-slate-900/90 backdrop-blur-xl text-white px-5 py-3.5 rounded-2xl shadow-[0_10px_30px_rgba(139,92,246,0.3)] border border-purple-500/40 flex items-center gap-3 animate-in fade-in slide-in-from-top-5 duration-300">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm font-bold text-sm">
+        <div className="fixed top-20 right-4 sm:right-6 z-50 max-w-md bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl border border-slate-800 flex items-center gap-3 animate-in fade-in slide-in-from-top-5 duration-200">
+          <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold text-xs">
             ✨
           </div>
           <div className="flex-1 text-xs">
-            <p className="font-bold text-purple-300">UTRA STORE Luxury Greetings</p>
-            <p className="font-medium text-slate-200 mt-0.5">{welcomeBanner}</p>
+            <p className="font-bold text-slate-200">UTRA STORE</p>
+            <p className="font-medium text-slate-300 mt-0.5">{welcomeBanner}</p>
           </div>
           <button
             onClick={() => setWelcomeBanner(null)}
-            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -208,20 +204,19 @@ function AppContent() {
       {/* Floating AI Customer Support Button */}
       <button
         onClick={() => setIsAiSupportModalOpen(true)}
-        className="fixed bottom-24 md:bottom-8 right-4 sm:right-6 z-40 bg-slate-900/80 backdrop-blur-xl border border-purple-500/40 hover:border-purple-400 text-white px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-full shadow-[0_0_25px_rgba(139,92,246,0.35)] flex items-center gap-2.5 transition-all hover:scale-105 group cursor-pointer"
-        title="AI Customer Support & WhatsApp Help"
+        className="fixed bottom-24 md:bottom-8 right-4 sm:right-6 z-40 bg-slate-900 text-white hover:bg-slate-800 px-4 py-3 rounded-full shadow-lg flex items-center gap-2.5 transition-all hover:scale-105 border border-slate-700 cursor-pointer"
+        title="AI Customer Support"
       >
         <div className="relative">
-          <Bot className="w-5 h-5 text-purple-400 group-hover:text-cyan-400 transition-colors" />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-cyan-400 rounded-full animate-ping" />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-cyan-400 rounded-full" />
+          <Bot className="w-5 h-5 text-blue-400" />
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full" />
         </div>
         <div className="text-left hidden sm:block">
-          <span className="block text-[10px] text-purple-300 font-extrabold uppercase tracking-wider leading-none">
-            24/7 Concierge
+          <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">
+            24/7 Support
           </span>
-          <span className="text-xs font-black text-white leading-tight">
-            AI Assistant & Support
+          <span className="text-xs font-bold text-white leading-tight">
+            AI Assistant
           </span>
         </div>
       </button>
